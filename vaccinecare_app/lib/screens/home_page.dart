@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:vaccinecare_app/screens/login_page.dart';
+import 'package:vaccinecare_app/screens/auth_page.dart';
 
 class HomeScreen extends StatelessWidget {
   final _supabase = Supabase.instance.client;

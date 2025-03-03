@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 import '../screens/home_page.dart';
 
 class AuthScreen extends StatefulWidget {
@@ -12,7 +14,14 @@ class _AuthScreenState extends State<AuthScreen> {
   final _supabase = Supabase.instance.client;
   
   bool isLogin = true; // Toggle between login & sign-up
-  String email = '', password = '', name = '', phone = '', address = '', role = 'parent';
+  String email = '', password = '', name = '', phone = '', address = '';
+
+  /// Hashes the password before storing in the database
+  String hashPassword(String password) {
+    var bytes = utf8.encode(password); 
+    var digest = sha256.convert(bytes);
+    return digest.toString();
+  }
 
   Future<void> authenticateUser() async {
     if (!_formKey.currentState!.validate()) return;
@@ -20,22 +29,41 @@ class _AuthScreenState extends State<AuthScreen> {
 
     try {
       if (isLogin) {
-        // Login
-        final response = await _supabase.auth.signInWithPassword(email: email, password: password);
-        if (response.session != null) {
+        // ✅ Login User
+        final response = await _supabase
+            .from('users')
+            .select()
+            .eq('email', email)
+            .eq('password_hash', hashPassword(password))
+            .maybeSingle();
+
+        if (response != null) {
           Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreen()));
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Invalid email or password')));
         }
       } else {
-        // Sign-Up
-        final response = await _supabase.auth.signUp(email: email, password: password, data: {
-          'name': name,
-          'phone_number': phone,
-          'role': role,
-          'address': address,
-        });
+        // ✅ Sign-Up User in Supabase Auth
+        final response = await _supabase.auth.signUp(email: email, password: password);
 
         if (response.user != null) {
-          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreen()));
+          // ✅ Store User Data in Supabase `users` Table
+          await _supabase.from('users').insert({
+            'user_id': response.user!.id,  // Auto-generated UUID
+            'name': name,
+            'email': email,
+            'phone_number': phone,
+            'address': address,
+            'password_hash': hashPassword(password), // Storing password hash
+            'created_at': DateTime.now().toIso8601String(),
+            'updated_at': DateTime.now().toIso8601String(),
+          });
+
+          // ✅ Redirect to Login Page After Successful Registration
+          setState(() {
+            isLogin = true; // Toggle to login mode
+          });
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Sign-up successful. Please log in.')));
         }
       }
     } catch (error) {
@@ -80,14 +108,6 @@ class _AuthScreenState extends State<AuthScreen> {
                 decoration: InputDecoration(labelText: 'Address'),
                 validator: (val) => val!.isEmpty ? 'Enter your address' : null,
                 onSaved: (val) => address = val!,
-              ),
-              if (!isLogin) DropdownButtonFormField(
-                value: role,
-                items: ['parent', 'healthcare_worker', 'admin']
-                    .map((r) => DropdownMenuItem(value: r, child: Text(r)))
-                    .toList(),
-                onChanged: (val) => setState(() => role = val as String),
-                decoration: InputDecoration(labelText: 'Role'),
               ),
               SizedBox(height: 20),
               ElevatedButton(
