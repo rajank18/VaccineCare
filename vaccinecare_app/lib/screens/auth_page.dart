@@ -14,7 +14,7 @@ class _AuthScreenState extends State<AuthScreen> {
   final _formKey = GlobalKey<FormState>();
   final _supabase = Supabase.instance.client;
   
-  bool isLogin = true; // Toggle between login & sign-up
+  bool isLogin = true;
   String email = '', password = '', name = '', phone = '', address = '';
 
   /// Hashes the password before storing in the database
@@ -24,13 +24,30 @@ class _AuthScreenState extends State<AuthScreen> {
     return digest.toString();
   }
 
+  /// **Check if baby details exist for this parent**
+  Future<void> checkBabyDetailsAndNavigate(String parentId) async {
+    final response = await _supabase
+        .from('babies')
+        .select()
+        .eq('parent_id', parentId)
+        .maybeSingle();
+
+    if (response != null) {
+      // ✅ Baby details exist → Go to HomeScreen
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreen()));
+    } else {
+      // ❌ No baby details → Go to BabyDetailsPage
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => BabyDetailsPage(parentId: parentId)));
+    }
+  }
+
   Future<void> authenticateUser() async {
     if (!_formKey.currentState!.validate()) return;
     _formKey.currentState!.save();
 
     try {
       if (isLogin) {
-        //  Login User
+        // ✅ Login User
         final response = await _supabase
             .from('users')
             .select()
@@ -39,32 +56,31 @@ class _AuthScreenState extends State<AuthScreen> {
             .maybeSingle();
 
         if (response != null) {
-          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => BabyDetailsPage()));
+          String parentId = response['user_id'];
+          await checkBabyDetailsAndNavigate(parentId); // ✅ Check and redirect
         } else {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Invalid email or password')));
         }
       } else {
-        //  Sign-Up User in Supabase Auth
+        // ✅ Sign-Up User
         final response = await _supabase.auth.signUp(email: email, password: password);
-
         if (response.user != null) {
-          // ✅ Store User Data in Supabase `users` Table
           await _supabase.from('users').insert({
-            'user_id': response.user!.id,  // Auto-generated UUID
+            'user_id': response.user!.id,
             'name': name,
             'email': email,
             'phone_number': phone,
             'address': address,
-            'password_hash': hashPassword(password), // Storing password hash
+            'password_hash': hashPassword(password),
             'created_at': DateTime.now().toIso8601String(),
             'updated_at': DateTime.now().toIso8601String(),
           });
 
-          //  Redirect to Login Page After Successful Registration
-          setState(() {
-            isLogin = true; // Toggle to login mode
-          });
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Sign-up successful. Please log in.')));
+          // ✅ New user → Go to BabyDetailsPage
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => BabyDetailsPage(parentId: response.user!.id)),
+          );
         }
       }
     } catch (error) {
