@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
+import 'package:vaccinecare_app/screens/baby_details.dart';
 import '../screens/home_page.dart';
 
 class AuthScreen extends StatefulWidget {
@@ -38,7 +39,7 @@ class _AuthScreenState extends State<AuthScreen> {
             .maybeSingle();
 
         if (response != null) {
-          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreen()));
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => BabyDetailsPage()));
         } else {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Invalid email or password')));
         }
