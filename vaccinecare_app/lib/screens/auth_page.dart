@@ -29,7 +29,7 @@ class _AuthScreenState extends State<AuthScreen> {
 
     try {
       if (isLogin) {
-        // ✅ Login User
+        //  Login User
         final response = await _supabase
             .from('users')
             .select()
@@ -43,7 +43,7 @@ class _AuthScreenState extends State<AuthScreen> {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Invalid email or password')));
         }
       } else {
-        // ✅ Sign-Up User in Supabase Auth
+        //  Sign-Up User in Supabase Auth
         final response = await _supabase.auth.signUp(email: email, password: password);
 
         if (response.user != null) {
@@ -59,7 +59,7 @@ class _AuthScreenState extends State<AuthScreen> {
             'updated_at': DateTime.now().toIso8601String(),
           });
 
-          // ✅ Redirect to Login Page After Successful Registration
+          //  Redirect to Login Page After Successful Registration
           setState(() {
             isLogin = true; // Toggle to login mode
           });
