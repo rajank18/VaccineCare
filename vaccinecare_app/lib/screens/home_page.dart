@@ -1,9 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:vaccinecare_app/screens/auth_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'auth_page.dart';
+import 'vaccine_track_record.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
+  @override
+  _HomeScreenState createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
   final _supabase = Supabase.instance.client;
+  int _selectedIndex = 0;
+  List<String> _checkedVaccines = [];
+  
+  final List<String> _titles = ["Home", "Vaccine Tracker", "Profile"]; // Dynamic Titles
 
   Future<void> logout(BuildContext context) async {
     await _supabase.auth.signOut();
@@ -11,21 +22,87 @@ class HomeScreen extends StatelessWidget {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _loadVaccineData();
+  }
+
+  Future<void> _loadVaccineData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _checkedVaccines = prefs.getStringList('checkedVaccines') ?? [];
+    });
+  }
+
+  final List<Widget> _pages = [
+    HomePageContent(),
+    VaccineDetailsPage(),
+    Center(child: Text('User Profile (Coming Soon)', style: TextStyle(fontSize: 18))),
+  ];
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Home')),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('Welcome to Vaccine Care!'),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () => logout(context),
-              child: Text('Logout'),
-            ),
-          ],
-        ),
+      appBar: AppBar(title: Text(_titles[_selectedIndex])), // Dynamic title based on tab
+
+      body: _selectedIndex == 0 ? HomePageContent(vaccines: _checkedVaccines) : _pages[_selectedIndex],
+
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: (index) async {
+          if (index == 0) {
+            await _loadVaccineData(); // Refresh vaccine data when returning to Home
+          }
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
+        items: [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.vaccines), label: 'Tracker'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+        ],
+      ),
+
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => logout(context),
+        child: Icon(Icons.logout),
+        tooltip: "Logout",
+      ),
+    );
+  }
+}
+
+// Home Page Content with Vaccine Summary
+class HomePageContent extends StatelessWidget {
+  final List<String> vaccines;
+
+  HomePageContent({this.vaccines = const []});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("Welcome to Vaccine Care!", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+          SizedBox(height: 10),
+          Text("Vaccines Applied:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          Expanded(
+            child: vaccines.isEmpty
+                ? Center(child: Text("No vaccines selected yet.", style: TextStyle(fontSize: 16, color: Colors.grey)))
+                : ListView.builder(
+                    itemCount: vaccines.length,
+                    itemBuilder: (context, index) {
+                      return ListTile(
+                        leading: Icon(Icons.check_circle, color: Colors.green),
+                        title: Text(vaccines[index]),
+                      );
+                    },
+                  ),
+          ),
+        ],
       ),
     );
   }

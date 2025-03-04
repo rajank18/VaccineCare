@@ -52,17 +52,16 @@ class _BabyDetailsPageState extends State<BabyDetailsPage> {
       // Navigate to Vaccine Details Page after successful form submission
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (context) => HomeScreen()
-          // VaccineDetailsPage(
-          //   babyName: _nameController.text,
-          //   birthDate: _birthDateController.text,
-          //   age: _age ?? "N/A",
-          //   birthPlace: _birthPlaceController.text,
-          //   bloodGroup: _bloodGroup!,
-          //   disabilityStatus: _hasDisability,
-          // ),
-        ),
+        MaterialPageRoute(builder: (context) => HomeScreen()
+            // VaccineDetailsPage(
+            //   babyName: _nameController.text,
+            //   birthDate: _birthDateController.text,
+            //   age: _age ?? "N/A",
+            //   birthPlace: _birthPlaceController.text,
+            //   bloodGroup: _bloodGroup!,
+            //   disabilityStatus: _hasDisability,
+            // ),
+            ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -97,7 +96,8 @@ class _BabyDetailsPageState extends State<BabyDetailsPage> {
               DropdownButtonFormField<String>(
                 value: _bloodGroup,
                 items: ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"]
-                    .map((grp) => DropdownMenuItem(value: grp, child: Text(grp)))
+                    .map(
+                        (grp) => DropdownMenuItem(value: grp, child: Text(grp)))
                     .toList(),
                 onChanged: (value) => setState(() => _bloodGroup = value),
                 decoration: InputDecoration(labelText: "Blood Group"),
@@ -118,7 +118,7 @@ class _BabyDetailsPageState extends State<BabyDetailsPage> {
               SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _submitForm,
-                child: Text("Next: Vaccine Details"),
+                child: Text("Next: Home Page"),
               ),
             ],
           ),
