@@ -40,7 +40,6 @@ class _VaccineDetailsPageState extends State<VaccineDetailsPage> {
       ),
     );
 
-    // Wait 2 seconds and then return to HomeScreen
     Future.delayed(Duration(seconds: 2), () {
       Navigator.pushReplacement(
         context,
@@ -70,7 +69,21 @@ class _VaccineDetailsPageState extends State<VaccineDetailsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Vaccine Tracker")),
+      appBar: AppBar(
+        title: Text("Vaccine Tracker"),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.power_settings_new), // Power icon for logout
+            onPressed: () {
+              // Call logout function here if needed
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => HomeScreen()),
+              );
+            },
+          ),
+        ],
+      ),
       body: Column(
         children: [
           Expanded(

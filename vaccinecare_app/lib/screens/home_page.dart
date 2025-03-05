@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'auth_page.dart';
 import 'vaccine_track_record.dart';
+import 'user_profile.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -14,9 +15,12 @@ class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   List<String> _checkedVaccines = [];
   
-  final List<String> _titles = ["Home", "Vaccine Tracker", "Profile"]; // Dynamic Titles
+  final List<String> _titles = ["Home", "Vaccine Tracker", "Profile"]; 
 
   Future<void> logout(BuildContext context) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.remove('checkedVaccines'); // FIX: Clears stored vaccine data on logout
+
     await _supabase.auth.signOut();
     Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => AuthScreen()));
   }
@@ -37,21 +41,27 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<Widget> _pages = [
     HomePageContent(),
     VaccineDetailsPage(),
-    Center(child: Text('User Profile (Coming Soon)', style: TextStyle(fontSize: 18))),
+    UserProfilePage(),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(_titles[_selectedIndex])), // Dynamic title based on tab
-
+      appBar: AppBar(
+        title: Text(_titles[_selectedIndex]),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.power_settings_new), // Power icon for logout
+            onPressed: () => logout(context),
+          ),
+        ],
+      ),
       body: _selectedIndex == 0 ? HomePageContent(vaccines: _checkedVaccines) : _pages[_selectedIndex],
-
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: (index) async {
           if (index == 0) {
-            await _loadVaccineData(); // Refresh vaccine data when returning to Home
+            await _loadVaccineData();
           }
           setState(() {
             _selectedIndex = index;
@@ -62,12 +72,6 @@ class _HomeScreenState extends State<HomeScreen> {
           BottomNavigationBarItem(icon: Icon(Icons.vaccines), label: 'Tracker'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
-      ),
-
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => logout(context),
-        child: Icon(Icons.logout),
-        tooltip: "Logout",
       ),
     );
   }
