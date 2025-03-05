@@ -21,19 +21,19 @@ class _UserProfilePageState extends State<UserProfilePage> {
     try {
       final user = supabase.auth.currentUser;
       if (user == null) return;
-      
+
       final response = await supabase
           .from('users')
           .select('*')
           .eq('email', user.email!)
           .single();
-      
+
       final babyResponse = await supabase
           .from('babies')
           .select('*')
           .eq('parent_id', response['user_id'])
           .maybeSingle();
-      
+
       setState(() {
         userData = response;
         babyData = babyResponse;
@@ -97,11 +97,13 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                 style: TextStyle(fontSize: 18)),
                             Text('Gender: ${babyData!['gender']}',
                                 style: TextStyle(fontSize: 18)),
-                            Text('Blood Group: ${babyData!['blood_group'] ?? "N/A"}',
+                            Text(
+                                'Blood Group: ${babyData!['blood_group'] ?? "N/A"}',
                                 style: TextStyle(fontSize: 18)),
                           ],
                         )
-                      : Text('No baby data found', style: TextStyle(fontSize: 18)),
+                      : Text('No baby data found',
+                          style: TextStyle(fontSize: 18)),
                 ],
               ),
             ),

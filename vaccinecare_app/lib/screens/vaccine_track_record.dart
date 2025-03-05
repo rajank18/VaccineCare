@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'home_page.dart'; // Import HomeScreen
 
 class VaccineDetailsPage extends StatefulWidget {
   @override
@@ -41,10 +40,7 @@ class _VaccineDetailsPageState extends State<VaccineDetailsPage> {
     );
 
     Future.delayed(Duration(seconds: 2), () {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => HomeScreen()),
-      );
+      Navigator.pop(context); // Fixed: Pop instead of pushing HomeScreen
     });
   }
 
@@ -68,52 +64,37 @@ class _VaccineDetailsPageState extends State<VaccineDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Vaccine Tracker"),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.power_settings_new), // Power icon for logout
-            onPressed: () {
-              // Call logout function here if needed
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => HomeScreen()),
+    return Column(
+      // Removed Scaffold to prevent duplicate AppBar
+      children: [
+        Expanded(
+          child: ListView.builder(
+            itemCount: _vaccines.length,
+            itemBuilder: (context, index) {
+              return CheckboxListTile(
+                title: Text(_vaccines[index]["name"]),
+                subtitle: Text("Recommended: ${_vaccines[index]["age"]}"),
+                value: _vaccines[index]["applied"],
+                onChanged: (bool? value) {
+                  setState(() {
+                    _vaccines[index]["applied"] = value!;
+                  });
+                },
               );
             },
           ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              itemCount: _vaccines.length,
-              itemBuilder: (context, index) {
-                return CheckboxListTile(
-                  title: Text(_vaccines[index]["name"]),
-                  subtitle: Text("Recommended: ${_vaccines[index]["age"]}"),
-                  value: _vaccines[index]["applied"],
-                  onChanged: (bool? value) {
-                    setState(() {
-                      _vaccines[index]["applied"] = value!;
-                    });
-                  },
-                );
-              },
-            ),
+        ),
+        SizedBox(height: 10),
+        ElevatedButton(
+          onPressed: () => _submitVaccinationData(context),
+          style: ElevatedButton.styleFrom(
+            minimumSize: Size(double.infinity, 50),
           ),
-          SizedBox(height: 10),
-          ElevatedButton(
-            onPressed: () => _submitVaccinationData(context),
-            style: ElevatedButton.styleFrom(
-              minimumSize: Size(double.infinity, 50),
-            ),
-            child: Text("Submit & Return to Home", style: TextStyle(fontSize: 18)),
-          ),
-          SizedBox(height: 20),
-        ],
-      ),
+          child:
+              Text("Submit & Return to Home", style: TextStyle(fontSize: 18)),
+        ),
+        SizedBox(height: 20),
+      ],
     );
   }
 }
