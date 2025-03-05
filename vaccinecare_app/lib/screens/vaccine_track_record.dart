@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:vaccinecare_app/screens/home_page.dart';
 
 class VaccineDetailsPage extends StatefulWidget {
   @override
@@ -7,7 +8,7 @@ class VaccineDetailsPage extends StatefulWidget {
 }
 
 class _VaccineDetailsPageState extends State<VaccineDetailsPage> {
-  List<Map<String, dynamic>> _vaccines = [
+  final List<Map<String, dynamic>> _vaccines = [
     {"name": "Hepatitis B - Dose 1", "age": "At Birth", "applied": false},
     {"name": "BCG", "age": "At Birth", "applied": false},
     {"name": "Polio - Dose 1", "age": "At Birth", "applied": false},
@@ -40,7 +41,10 @@ class _VaccineDetailsPageState extends State<VaccineDetailsPage> {
     );
 
     Future.delayed(Duration(seconds: 2), () {
-      Navigator.pop(context); // Fixed: Pop instead of pushing HomeScreen
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => HomeScreen()),
+      );
     });
   }
 

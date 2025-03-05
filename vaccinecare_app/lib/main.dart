@@ -12,8 +12,12 @@ void main() async {
     anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhycGN4emp5eWh4cW1mcnd3ZmRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA5OTMwMzcsImV4cCI6MjA1NjU2OTAzN30.ZGIJJCaC4_hmuzESOv6IIeTMywjHGmg_oE3UB5IF5xU',
   );
 
+  final supabase = Supabase.instance.client;
+  // await supabase.auth.recoverSession(); // ✅ Ensures session is restored
+
   runApp(MyApp());
 }
+
 
 class MyApp extends StatelessWidget {
   @override
@@ -46,4 +50,4 @@ class AuthRedirectScreen extends StatelessWidget {
       },
     );
   }
-}
+} 
