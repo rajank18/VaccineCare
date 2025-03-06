@@ -21,7 +21,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> logout(BuildContext context) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.remove('checkedVaccines'); // FIX: Clears stored vaccine data on logout
+    await prefs.remove('checkedVaccines'); 
 
     await _supabase.auth.signOut();
     Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => AuthScreen()));
@@ -47,36 +47,39 @@ class _HomeScreenState extends State<HomeScreen> {
   ];
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_titles[_selectedIndex]),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.power_settings_new), // Power icon for logout
-            onPressed: () => logout(context),
-          ),
-        ],
-      ),
-      body: _selectedIndex == 0 ? HomePageContent(vaccines: _checkedVaccines) : _pages[_selectedIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: (index) async {
-          if (index == 0) {
-            await _loadVaccineData();
-          }
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
-        items: [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.vaccines), label: 'Tracker'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-        ],
-      ),
-    );
-  }
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: _selectedIndex == 0
+        ? AppBar(
+            title: Text(_titles[_selectedIndex]),
+            actions: [
+              IconButton(
+                icon: Icon(Icons.power_settings_new),
+                onPressed: () => logout(context),
+              ),
+            ],
+          )
+        : null, // No AppBar for Tracker & Profile
+    body: _selectedIndex == 0 ? HomePageContent(vaccines: _checkedVaccines) : _pages[_selectedIndex],
+    bottomNavigationBar: BottomNavigationBar(
+      currentIndex: _selectedIndex,
+      onTap: (index) async {
+        if (index == 0) {
+          await _loadVaccineData();
+        }
+        setState(() {
+          _selectedIndex = index;
+        });
+      },
+      items: [
+        BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+        BottomNavigationBarItem(icon: Icon(Icons.vaccines), label: 'Tracker'),
+        BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+      ],
+    ),
+  );
+}
+
 }
 
 // Home Page Content with Vaccine Summary
