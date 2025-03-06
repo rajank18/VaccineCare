@@ -106,7 +106,7 @@ class _AuthScreenState extends State<AuthScreen> {
       if (response != null) {
         String parentId = response['user_id'];
 
-        // ✅ Store email locally (Ensuring it's stored on every device)
+        // ✅ Store email locally after login
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('user_email', email);
         print("✅ Email stored locally: $email");
@@ -115,6 +115,48 @@ class _AuthScreenState extends State<AuthScreen> {
       } else {
         print("❌ Invalid email or password");
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Invalid email or password')));
+      }
+    } else {
+      // ✅ Sign-Up User
+      final response = await _supabase.auth.signUp(email: email, password: password);
+
+      if (response.user != null) {
+        // ✅ Insert user details into `users` table
+        final insertResponse = await _supabase.from('users').insert({
+          'user_id': response.user!.id,
+          'name': name,
+          'email': email,
+          'phone_number': phone,
+          'address': address,
+          'password_hash': hashPassword(password),
+          'created_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTime.now().toIso8601String(),
+        });
+
+        if (insertResponse.error != null) {
+          print("❌ Error inserting user into database: ${insertResponse.error!.message}");
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error creating account')));
+          return;
+        }
+
+        print("✅ User data stored in Supabase `users` table.");
+
+        // ✅ Store email locally for fetching user data later
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('user_email', email);
+        print("✅ Email stored locally after sign-up: $email");
+
+        // ✅ Auto log in after sign-up
+        await _supabase.auth.signInWithPassword(email: email, password: password);
+
+        // ✅ Navigate to BabyDetailsPage
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => BabyDetailsPage(parentId: response.user!.id)),
+        );
+      } else {
+        print("❌ Sign-up failed");
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Sign-up failed')));
       }
     }
   } catch (error) {
