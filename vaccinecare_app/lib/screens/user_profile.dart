@@ -20,42 +20,43 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
   /// ✅ Fetch User Data Using Stored Email
   Future<void> fetchUserProfile() async {
-    setState(() => isLoading = true);
+  setState(() => isLoading = true);
 
-    try {
-      // ✅ Retrieve stored email
-      final prefs = await SharedPreferences.getInstance();
-      final storedEmail = prefs.getString('user_email');
+  try {
+    // ✅ Retrieve stored email (Ensures correct email is used)
+    final prefs = await SharedPreferences.getInstance();
+    final storedEmail = prefs.getString('user_email');
 
-      if (storedEmail == null) {
-        print("⚠️ No stored email found!");
-        setState(() => isLoading = false);
-        return;
-      }
-
-      print("✅ Fetching user data for email: $storedEmail");
-
-      // ✅ Fetch user details from `users` table using email
-      final response = await _supabase
-          .from('users')
-          .select()
-          .eq('email', storedEmail) // 🔹 Use email instead of session
-          .maybeSingle();
-
-      if (response != null) {
-        setState(() {
-          userData = response;
-          isLoading = false;
-        });
-      } else {
-        setState(() => isLoading = false);
-        print("⚠️ User data not found in `users` table!");
-      }
-    } catch (error) {
+    if (storedEmail == null) {
+      print("⚠️ No stored email found!");
       setState(() => isLoading = false);
-      print("❌ Error fetching user data: $error");
+      return;
     }
+
+    print("✅ Fetching user data for email: $storedEmail");
+
+    // ✅ Fetch user details from `users` table using email
+    final response = await _supabase
+        .from('users')
+        .select()
+        .eq('email', storedEmail)
+        .maybeSingle();
+
+    if (response != null) {
+      setState(() {
+        userData = response;
+        isLoading = false;
+      });
+    } else {
+      setState(() => isLoading = false);
+      print("⚠️ User data not found in `users` table for $storedEmail!");
+    }
+  } catch (error) {
+    setState(() => isLoading = false);
+    print("❌ Error fetching user data: $error");
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
