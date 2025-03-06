@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:vaccinecare_app/screens/home_page.dart';
 
 class VaccineDetailsPage extends StatefulWidget {
   @override
@@ -8,97 +7,76 @@ class VaccineDetailsPage extends StatefulWidget {
 }
 
 class _VaccineDetailsPageState extends State<VaccineDetailsPage> {
-  final List<Map<String, dynamic>> _vaccines = [
-    {"name": "Hepatitis B - Dose 1", "age": "At Birth", "applied": false},
-    {"name": "BCG", "age": "At Birth", "applied": false},
-    {"name": "Polio - Dose 1", "age": "At Birth", "applied": false},
-    {"name": "DTP - Dose 1", "age": "At 6 Weeks", "applied": false},
-    {"name": "Polio - Dose 2", "age": "At 6 Weeks", "applied": false},
-    {"name": "Rotavirus - Dose 1", "age": "At 6 Weeks", "applied": false},
-    {"name": "Measles - Dose 1", "age": "At 9 Months", "applied": false},
-    {"name": "DTP Booster 1", "age": "At 18 Months", "applied": false},
-    {"name": "Polio Booster", "age": "At 18 Months", "applied": false},
-    {"name": "Typhoid Vaccine", "age": "At 2 Years", "applied": false},
+  List<Map<String, dynamic>> _vaccines = [
+    {"name": "Hepatitis B - Dose 1", "age": "At Birth", "applied": true, "date": "2024-01-01", "expanded": false},
+    {"name": "BCG", "age": "At Birth", "applied": true, "date": "2024-01-02", "expanded": false},
+    {"name": "Polio - Dose 1", "age": "At Birth", "applied": false, "due": "In 2 weeks", "expanded": false},
+    {"name": "DTP - Dose 1", "age": "At 6 Weeks", "applied": false, "due": "In 4 weeks", "expanded": false},
   ];
-
-  Future<void> _saveVaccinationData() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    List<String> appliedVaccines = _vaccines
-        .where((v) => v["applied"])
-        .map((v) => v["name"].toString())
-        .toList();
-    await prefs.setStringList('checkedVaccines', appliedVaccines);
-  }
-
-  void _submitVaccinationData(BuildContext context) async {
-    await _saveVaccinationData();
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text("Vaccine data saved! Returning to Home..."),
-        duration: Duration(seconds: 2),
-      ),
-    );
-
-    Future.delayed(Duration(seconds: 2), () {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => HomeScreen()),
-      );
-    });
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _loadVaccineData();
-  }
-
-  Future<void> _loadVaccineData() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    List<String> checkedVaccines = prefs.getStringList('checkedVaccines') ?? [];
-    setState(() {
-      for (var vaccine in _vaccines) {
-        if (checkedVaccines.contains(vaccine["name"])) {
-          vaccine["applied"] = true;
-        }
-      }
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
+    List<Map<String, dynamic>> appliedVaccines = _vaccines.where((v) => v['applied']).toList();
+    List<Map<String, dynamic>> pendingVaccines = _vaccines.where((v) => !v['applied']).toList();
+
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("Vaccines Applied Till Now", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          SizedBox(height: 10),
+          _buildVaccineList(appliedVaccines, Colors.green[100]!, "Date Applied: ", true),
+          SizedBox(height: 20),
+          Text("Vaccines To Be Applied", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          SizedBox(height: 10),
+          _buildVaccineList(pendingVaccines, Colors.red[100]!, "Due In: ", false),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVaccineList(List<Map<String, dynamic>> vaccines, Color color, String label, bool showPdf) {
     return Column(
-      // Removed Scaffold to prevent duplicate AppBar
-      children: [
-        Expanded(
-          child: ListView.builder(
-            itemCount: _vaccines.length,
-            itemBuilder: (context, index) {
-              return CheckboxListTile(
-                title: Text(_vaccines[index]["name"]),
-                subtitle: Text("Recommended: ${_vaccines[index]["age"]}"),
-                value: _vaccines[index]["applied"],
-                onChanged: (bool? value) {
-                  setState(() {
-                    _vaccines[index]["applied"] = value!;
-                  });
-                },
-              );
-            },
+      children: vaccines.map((vaccine) {
+        return GestureDetector(
+          onTap: () {
+            setState(() {
+              vaccine['expanded'] = !vaccine['expanded'];
+            });
+          },
+          child: AnimatedContainer(
+            duration: Duration(milliseconds: 300),
+            margin: EdgeInsets.symmetric(vertical: 8),
+            padding: EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [BoxShadow(color: Colors.grey.shade300, blurRadius: 5)],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(vaccine['name'], style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    ),
+                    if (showPdf) Icon(Icons.picture_as_pdf, color: Colors.blue),
+                  ],
+                ),
+                SizedBox(height: 5),
+                Text("$label ${vaccine["date"] ?? vaccine["due"]}", style: TextStyle(fontSize: 16, color: Colors.grey[700])),
+                if (vaccine['expanded']) ...[
+                  SizedBox(height: 10),
+                  Text("More details about ${vaccine['name']}...", style: TextStyle(fontSize: 14, color: Colors.black54)),
+                ],
+              ],
+            ),
           ),
-        ),
-        SizedBox(height: 10),
-        ElevatedButton(
-          onPressed: () => _submitVaccinationData(context),
-          style: ElevatedButton.styleFrom(
-            minimumSize: Size(double.infinity, 50),
-          ),
-          child:
-              Text("Submit & Return to Home", style: TextStyle(fontSize: 18)),
-        ),
-        SizedBox(height: 20),
-      ],
+        );
+      }).toList(),
     );
   }
 }

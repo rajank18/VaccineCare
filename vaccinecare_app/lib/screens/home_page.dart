@@ -4,6 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'auth_page.dart';
 import 'vaccine_track_record.dart';
 import 'user_profile.dart';
+import 'dart:async';
+
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -78,10 +80,57 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 // Home Page Content with Vaccine Summary
-class HomePageContent extends StatelessWidget {
+// Home Page Content with Vaccine Summary and Education Slider
+
+class HomePageContent extends StatefulWidget {
   final List<String> vaccines;
 
   HomePageContent({this.vaccines = const []});
+
+  @override
+  _HomePageContentState createState() => _HomePageContentState();
+}
+
+class _HomePageContentState extends State<HomePageContent> {
+  final PageController _pageController = PageController();
+  int _currentPage = 0;
+  Timer? _timer;
+
+  final List<String> educationSlides = [
+    "Vaccines help prevent serious diseases like polio, measles, and COVID-19.",
+    "Getting vaccinated protects not just you, but also those around you.",
+    "Vaccines are tested for safety and effectiveness before approval.",
+    "Some vaccines require booster doses for long-term immunity.",
+    "Side effects of vaccines are usually mild and temporary."
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _startAutoSlide();
+  }
+
+  void _startAutoSlide() {
+    _timer = Timer.periodic(Duration(seconds: 3), (timer) {
+      if (_currentPage < educationSlides.length - 1) {
+        _currentPage++;
+      } else {
+        _currentPage = 0; // Reset to first slide
+      }
+      _pageController.animateToPage(
+        _currentPage,
+        duration: Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _pageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -90,18 +139,67 @@ class HomePageContent extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("Welcome to Vaccine Care!", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+          // Education Slider Section
+          SizedBox(
+            height: 150,
+            child: PageView.builder(
+              controller: _pageController,
+              itemCount: educationSlides.length,
+              onPageChanged: (index) {
+                setState(() {
+                  _currentPage = index;
+                });
+              },
+              itemBuilder: (context, index) {
+                return Card(
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Center(
+                      child: Text(
+                        educationSlides[index],
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
           SizedBox(height: 10),
+
+          // Dots Indicator
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(
+              educationSlides.length,
+              (index) => Container(
+                margin: EdgeInsets.symmetric(horizontal: 4),
+                width: _currentPage == index ? 10 : 6,
+                height: _currentPage == index ? 10 : 6,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: _currentPage == index ? Colors.blue : Colors.grey,
+                ),
+              ),
+            ),
+          ),
+
+          SizedBox(height: 20),
+
+          // Vaccine Summary Section
           Text("Vaccines Applied:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           Expanded(
-            child: vaccines.isEmpty
+            child: widget.vaccines.isEmpty
                 ? Center(child: Text("No vaccines selected yet.", style: TextStyle(fontSize: 16, color: Colors.grey)))
                 : ListView.builder(
-                    itemCount: vaccines.length,
+                    itemCount: widget.vaccines.length,
                     itemBuilder: (context, index) {
                       return ListTile(
                         leading: Icon(Icons.check_circle, color: Colors.green),
-                        title: Text(vaccines[index]),
+                        title: Text(widget.vaccines[index]),
                       );
                     },
                   ),
