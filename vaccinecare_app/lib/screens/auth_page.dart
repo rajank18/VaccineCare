@@ -88,8 +88,7 @@ class _AuthScreenState extends State<AuthScreen> {
   //     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.toString())));
   //   }
   // }
-
-  Future<void> authenticateUser() async {
+Future<void> authenticateUser() async {
   if (!_formKey.currentState!.validate()) return;
   _formKey.currentState!.save();
 
@@ -115,6 +114,27 @@ class _AuthScreenState extends State<AuthScreen> {
       } else {
         print("❌ Invalid email or password");
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Invalid email or password')));
+      }
+    } else {
+      // ✅ Sign-Up User
+      final response = await _supabase.auth.signUp(email: email, password: password);
+      if (response.user != null) {
+        await _supabase.from('users').insert({
+          'user_id': response.user!.id,
+          'name': name,
+          'email': email,
+          'phone_number': phone,
+          'address': address,
+          'password_hash': hashPassword(password),
+          'created_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTime.now().toIso8601String(),
+        });
+
+        // ✅ New user → Go to BabyDetailsPage
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => BabyDetailsPage(parentId: response.user!.id)),
+        );
       }
     }
   } catch (error) {
