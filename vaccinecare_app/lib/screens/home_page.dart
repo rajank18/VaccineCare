@@ -42,7 +42,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final List<Widget> _pages = [
     HomePageContent(),
-    VaccineDetailsPage(),
+    VaccinationRecordsPage(),
     UserProfilePage(),
   ];
 

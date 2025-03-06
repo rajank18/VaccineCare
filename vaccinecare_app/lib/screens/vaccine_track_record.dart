@@ -1,82 +1,142 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
-class VaccineDetailsPage extends StatefulWidget {
+class VaccinationRecordsPage extends StatefulWidget {
   @override
-  _VaccineDetailsPageState createState() => _VaccineDetailsPageState();
+  _VaccinationRecordsPageState createState() => _VaccinationRecordsPageState();
 }
 
-class _VaccineDetailsPageState extends State<VaccineDetailsPage> {
-  List<Map<String, dynamic>> _vaccines = [
-    {"name": "Hepatitis B - Dose 1", "age": "At Birth", "applied": true, "date": "2024-01-01", "expanded": false},
-    {"name": "BCG", "age": "At Birth", "applied": true, "date": "2024-01-02", "expanded": false},
-    {"name": "Polio - Dose 1", "age": "At Birth", "applied": false, "due": "In 2 weeks", "expanded": false},
-    {"name": "DTP - Dose 1", "age": "At 6 Weeks", "applied": false, "due": "In 4 weeks", "expanded": false},
-  ];
+class _VaccinationRecordsPageState extends State<VaccinationRecordsPage> {
+  final _supabase = Supabase.instance.client;
+  List<Map<String, dynamic>> vaccinationRecords = [];
+  bool isLoading = true;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    fetchVaccinationRecords();
+  }
+
+  /// ✅ Fetch Vaccination Records
+  Future<void> fetchVaccinationRecords() async {
+    setState(() => isLoading = true);
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final storedEmail = prefs.getString('user_email');
+      if (storedEmail == null) {
+        print("⚠️ No stored email found!");
+        setState(() => isLoading = false);
+        return;
+      }
+
+      final userResponse = await _supabase
+          .from('users')
+          .select('user_id')
+          .eq('email', storedEmail)
+          .maybeSingle();
+      if (userResponse == null) {
+        print("⚠️ User not found!");
+        setState(() => isLoading = false);
+        return;
+      }
+
+      final String userId = userResponse['user_id'];
+      final babyResponse = await _supabase
+          .from('babies')
+          .select('baby_id')
+          .eq('parent_id', userId)
+          .maybeSingle();
+      if (babyResponse == null) {
+        print("⚠️ No baby record found!");
+        setState(() => isLoading = false);
+        return;
+      }
+
+      final String babyId = babyResponse['baby_id'];
+      final vaccineResponse = await _supabase
+          .from('vaccination_records')
+          .select('''
+            record_id,
+            dose_number,
+            date_administered,
+            certificate_url,
+            created_at
+          ''')
+          .eq('baby_id', babyId)
+          .order('date_administered', ascending: true);
+
+      setState(() {
+        vaccinationRecords = List<Map<String, dynamic>>.from(vaccineResponse);
+        isLoading = false;
+      });
+    } catch (error) {
+      setState(() => isLoading = false);
+      print("❌ Error fetching vaccination details: $error");
+    }
+  }
+
+  /// ✅ Function to launch URL
+  Future<void> _launchURL(String url) async {
+    final Uri uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      print("❌ Could not launch $url");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    List<Map<String, dynamic>> appliedVaccines = _vaccines.where((v) => v['applied']).toList();
-    List<Map<String, dynamic>> pendingVaccines = _vaccines.where((v) => !v['applied']).toList();
-
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text("Vaccines Applied Till Now", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          SizedBox(height: 10),
-          _buildVaccineList(appliedVaccines, Colors.green[100]!, "Date Applied: ", true),
-          SizedBox(height: 20),
-          Text("Vaccines To Be Applied", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          SizedBox(height: 10),
-          _buildVaccineList(pendingVaccines, Colors.red[100]!, "Due In: ", false),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildVaccineList(List<Map<String, dynamic>> vaccines, Color color, String label, bool showPdf) {
-    return Column(
-      children: vaccines.map((vaccine) {
-        return GestureDetector(
-          onTap: () {
-            setState(() {
-              vaccine['expanded'] = !vaccine['expanded'];
-            });
-          },
-          child: AnimatedContainer(
-            duration: Duration(milliseconds: 300),
-            margin: EdgeInsets.symmetric(vertical: 8),
-            padding: EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.grey.shade300, blurRadius: 5)],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(vaccine['name'], style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                    ),
-                    if (showPdf) Icon(Icons.picture_as_pdf, color: Colors.blue),
-                  ],
+    return Scaffold(
+      appBar: AppBar(title: Text('Vaccination Records')),
+      body: isLoading
+          ? Center(child: CircularProgressIndicator())
+          : vaccinationRecords.isEmpty
+              ? Center(child: Text("No vaccination records found"))
+              : ListView.builder(
+                  itemCount: vaccinationRecords.length,
+                  itemBuilder: (context, index) {
+                    final record = vaccinationRecords[index];
+                    return Card(
+                      margin: EdgeInsets.all(10),
+                      child: Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text("💉 Dose Number: ${record['dose_number']}",
+                                style: TextStyle(fontSize: 16)),
+                            SizedBox(height: 8),
+                            Text("📅 Date Administered: ${record['date_administered']}",
+                                style: TextStyle(fontSize: 16)),
+                            SizedBox(height: 8),
+                            Text("🕒 Created At: ${record['created_at']}",
+                                style: TextStyle(fontSize: 16)),
+                            SizedBox(height: 8),
+                            
+                            // 🔹 Clickable Certificate URL
+                            record['certificate_url'] != null
+                                ? GestureDetector(
+                                    onTap: () => _launchURL(record['certificate_url']),
+                                    child: Text(
+                                      "📄 View Certificate",
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.blue,
+                                        decoration: TextDecoration.underline,
+                                      ),
+                                    ),
+                                  )
+                                : Text("📄 Certificate: Not Available", style: TextStyle(fontSize: 16)),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
                 ),
-                SizedBox(height: 5),
-                Text("$label ${vaccine["date"] ?? vaccine["due"]}", style: TextStyle(fontSize: 16, color: Colors.grey[700])),
-                if (vaccine['expanded']) ...[
-                  SizedBox(height: 10),
-                  Text("More details about ${vaccine['name']}...", style: TextStyle(fontSize: 14, color: Colors.black54)),
-                ],
-              ],
-            ),
-          ),
-        );
-      }).toList(),
     );
   }
 }
