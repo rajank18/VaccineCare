@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class UserProfilePage extends StatefulWidget {
   @override
@@ -12,31 +13,33 @@ class _UserProfilePageState extends State<UserProfilePage> {
   bool isLoading = true;
 
   @override
-  void didChangeDependencies() {
+  void didChangeDependencies() { 
     super.didChangeDependencies();
     fetchUserProfile();
   }
 
-  /// ✅ Fetch User Data from Supabase Auth & Users Table
+  /// ✅ Fetch User Data Using Stored Email
   Future<void> fetchUserProfile() async {
-    try {
-      // ✅ Fetch authenticated user from Supabase
-      final userResponse = await _supabase.auth.getUser();
-      final user = userResponse.user;
+    setState(() => isLoading = true);
 
-      if (user == null) {
-        print("⚠️ No user session found!");
+    try {
+      // ✅ Retrieve stored email
+      final prefs = await SharedPreferences.getInstance();
+      final storedEmail = prefs.getString('user_email');
+
+      if (storedEmail == null) {
+        print("⚠️ No stored email found!");
         setState(() => isLoading = false);
         return;
       }
 
-      print("✅ Logged-in User ID: ${user.id}"); // Debugging
+      print("✅ Fetching user data for email: $storedEmail");
 
-      // ✅ Fetch user details from `users` table
+      // ✅ Fetch user details from `users` table using email
       final response = await _supabase
           .from('users')
           .select()
-          .eq('user_id', user.id)
+          .eq('email', storedEmail) // 🔹 Use email instead of session
           .maybeSingle();
 
       if (response != null) {

@@ -41,7 +41,8 @@ class AuthRedirectScreen extends StatelessWidget {
       stream: _supabase.auth.onAuthStateChange,
       builder: (context, snapshot) {
         final session = _supabase.auth.currentSession;
-        
+        print("🔹 App Started - Current Session: ${session?.toJson()}"); // Debugging
+
         if (session != null && session.user != null) {
           return HomeScreen(); // ✅ Redirect to Home if logged in
         } else {
