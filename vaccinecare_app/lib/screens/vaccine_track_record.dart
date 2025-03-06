@@ -81,13 +81,18 @@ class _VaccinationRecordsPageState extends State<VaccinationRecordsPage> {
   /// ✅ Function to launch URL
 Future<void> _launchURL(String url) async {
   final Uri uri = Uri.parse(url);
-  
+
   if (await canLaunchUrl(uri)) {
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
+    await launchUrl(
+      uri,
+      mode: LaunchMode.externalApplication,  // Forces the link to open in an external browser
+    );
   } else {
     print("❌ Could not launch $url");
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Could not open the link. Please check your internet or try another browser."))
+      SnackBar(
+        content: Text("Could not open the link. Please check your internet or try another browser."),
+      ),
     );
   }
 }
