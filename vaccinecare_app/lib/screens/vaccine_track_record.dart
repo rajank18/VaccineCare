@@ -145,13 +145,10 @@
 //     );
 //   }
 // }
-
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:dio/dio.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class VaccinationRecordsPage extends StatefulWidget {
   @override
@@ -169,7 +166,6 @@ class _VaccinationRecordsPageState extends State<VaccinationRecordsPage> {
     fetchVaccinationRecords();
   }
 
-  /// ✅ Fetch Vaccination Records
   Future<void> fetchVaccinationRecords() async {
     setState(() => isLoading = true);
 
@@ -206,15 +202,17 @@ class _VaccinationRecordsPageState extends State<VaccinationRecordsPage> {
       }
 
       final String babyId = babyResponse['baby_id'];
+
       final vaccineResponse = await _supabase
           .from('vaccination_records')
           .select('''
-            record_id,
-            dose_number,
-            date_administered,
-            certificate_url,
-            created_at
-          ''')
+        record_id,
+        dose_number,
+        date_administered,
+        certificate_url,
+        created_at,
+        vaccines(name)
+      ''')
           .eq('baby_id', babyId)
           .order('date_administered', ascending: true);
 
@@ -228,29 +226,13 @@ class _VaccinationRecordsPageState extends State<VaccinationRecordsPage> {
     }
   }
 
-  /// ✅ Function to Download Certificate
-  Future<void> _downloadFile(String url, String fileName) async {
-    try {
-      // ✅ Request storage permission (Android only)
-      if (await Permission.storage.request().isGranted) {
-        final dir = await getExternalStorageDirectory(); // Get storage path
-        String savePath = "${dir!.path}/$fileName"; // Define file path
-
-        Dio dio = Dio();
-        await dio.download(url, savePath);
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Downloaded: $savePath")),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Permission denied! Please allow storage access.")),
-        );
-      }
-    } catch (e) {
-      print("❌ Download error: $e");
+  /// ✅ Function to View Certificate
+  void _viewCertificate(String url) async {
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Download failed!")),
+        SnackBar(content: Text("Could not open certificate!")),
       );
     }
   }
@@ -267,31 +249,90 @@ class _VaccinationRecordsPageState extends State<VaccinationRecordsPage> {
                   itemCount: vaccinationRecords.length,
                   itemBuilder: (context, index) {
                     final record = vaccinationRecords[index];
+
                     return Card(
-                      margin: EdgeInsets.all(10),
+                      margin: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                      elevation: 5,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
                       child: Padding(
                         padding: EdgeInsets.all(16),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text("💉 Dose Number: ${record['dose_number']}",
-                                style: TextStyle(fontSize: 16)),
-                            SizedBox(height: 8),
-                            Text("📅 Date Administered: ${record['date_administered']}",
-                                style: TextStyle(fontSize: 16)),
-                            SizedBox(height: 8),
-                            Text("🕒 Created At: ${record['created_at']}",
-                                style: TextStyle(fontSize: 16)),
+                            /// **Vaccine Name (Large and Bold)**
+                            Text(
+                              record['vaccines']['name'] ?? 'N/A',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blueAccent,
+                              ),
+                            ),
                             SizedBox(height: 8),
 
-                            // 🔹 Download Certificate Button
+                            /// **Dose Number**
+                            Row(
+                              children: [
+                                Icon(Icons.local_hospital, color: Colors.blueAccent, size: 20),
+                                SizedBox(width: 8),
+                                Text("Dose Number: ${record['dose_number']}",
+                                    style: TextStyle(fontSize: 16)),
+                              ],
+                            ),
+                            SizedBox(height: 8),
+
+                            /// **Date Administered (Renamed to Applied On)**
+                            Row(
+                              children: [
+                                Icon(Icons.calendar_today, color: Colors.green, size: 20),
+                                SizedBox(width: 8),
+                                Text("Applied On: ${record['date_administered']}",
+                                    style: TextStyle(fontSize: 16)),
+                              ],
+                            ),
+                            SizedBox(height: 8),
+
+                            /// **Created At (Only Date)**
+                            Row(
+                              children: [
+                                Icon(Icons.date_range, color: Colors.orange, size: 20),
+                                SizedBox(width: 8),
+                                Text(
+                                  "Created On: ${record['created_at'].split('T')[0]}", // Only date part
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 12),
+
+                            /// **View Certificate Button (Styled)**
                             record['certificate_url'] != null
-                                ? ElevatedButton(
-                                    onPressed: () => _downloadFile(
-                                        record['certificate_url'], "certificate_${record['record_id']}.png"),
-                                    child: Text("📥 Download Certificate"),
+                                ? Container(
+                                    width: double.infinity,
+                                    child: ElevatedButton.icon(
+                                      style: ElevatedButton.styleFrom(
+                                        padding: EdgeInsets.symmetric(vertical: 12),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                      ),
+                                      onPressed: () => _viewCertificate(record['certificate_url']),
+                                      icon: Icon(Icons.picture_as_pdf, color: const Color.fromARGB(255, 0, 0, 0)),
+                                      label: Text(
+                                        "View Certificate",
+                                        style: TextStyle(fontSize: 16),
+                                      ),
+                                    ),
                                   )
-                                : Text("📄 Certificate: Not Available", style: TextStyle(fontSize: 16)),
+                                : Row(
+                                    children: [
+                                      Icon(Icons.warning_amber_rounded, color: Colors.red, size: 20),
+                                      SizedBox(width: 8),
+                                      Text("Certificate: Not Available", style: TextStyle(fontSize: 16)),
+                                    ],
+                                  ),
                           ],
                         ),
                       ),

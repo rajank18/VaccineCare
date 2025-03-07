@@ -16,7 +16,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Map<String, dynamic>> completedVaccines = [];
   List<Map<String, dynamic>> remainingVaccines = [];
   String selectedTab = 'remaining'; // Default to Remaining Vaccines
-  int _selectedIndex = 0;
+  int _selectedIndex = 0; // Track selected tab
 
   @override
   void initState() {
@@ -89,19 +89,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _onItemTapped(int index) {
-    if (index == _selectedIndex) return; // Prevent unnecessary navigation
-
-    switch (index) {
-      case 0:
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreen()));
-        break;
-      case 1:
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => VaccinationRecordsPage()));
-        break;
-      case 2:
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => UserProfilePage()));
-        break;
-    }
+    setState(() {
+      _selectedIndex = index; // Update index to change screen
+    });
   }
 
   void _logout() async {
@@ -112,6 +102,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // ✅ Define the pages for navigation
+    final List<Widget> pages = [
+      _buildHomePage(),
+      VaccinationRecordsPage(),
+      UserProfilePage(),
+    ];
+
     return Scaffold(
       appBar: AppBar(
         title: Text("VaccineCare"),
@@ -122,49 +119,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: isLoading
-          ? Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                // ✅ Toggle Buttons for Filtering
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    TextButton(
-                      onPressed: () => setState(() => selectedTab = 'remaining'),
-                      child: Text("Remaining Vaccines",
-                          style: TextStyle(fontSize: 18, fontWeight: selectedTab == 'remaining' ? FontWeight.bold : FontWeight.normal)),
-                    ),
-                    TextButton(
-                      onPressed: () => setState(() => selectedTab = 'completed'),
-                      child: Text("Completed Vaccines",
-                          style: TextStyle(fontSize: 18, fontWeight: selectedTab == 'completed' ? FontWeight.bold : FontWeight.normal)),
-                    ),
-                  ],
-                ),
-
-                // ✅ Vaccine List
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: selectedTab == 'remaining' ? remainingVaccines.length : completedVaccines.length,
-                    itemBuilder: (context, index) {
-                      final vaccine = selectedTab == 'remaining' ? remainingVaccines[index] : completedVaccines[index];
-                      return Card(
-                        margin: EdgeInsets.all(8),
-                        child: ListTile(
-                          title: Text(vaccine['name'], style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                          subtitle: Text("Age Group: ${vaccine['age_group']}\n${vaccine['description']}"),
-                          trailing: Icon(
-                            selectedTab == 'remaining' ? Icons.schedule : Icons.check_circle,
-                            color: selectedTab == 'remaining' ? Colors.orange : Colors.green,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
+      body: pages[_selectedIndex], // ✅ Display the selected page
       bottomNavigationBar: BottomNavigationBar(
         items: const [
           BottomNavigationBarItem(
@@ -184,5 +139,52 @@ class _HomeScreenState extends State<HomeScreen> {
         onTap: _onItemTapped,
       ),
     );
+  }
+
+  /// ✅ Separate home page UI
+  Widget _buildHomePage() {
+    return isLoading
+        ? Center(child: CircularProgressIndicator())
+        : Column(
+            children: [
+              // ✅ Toggle Buttons for Filtering
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  TextButton(
+                    onPressed: () => setState(() => selectedTab = 'remaining'),
+                    child: Text("Remaining Vaccines",
+                        style: TextStyle(fontSize: 18, fontWeight: selectedTab == 'remaining' ? FontWeight.bold : FontWeight.normal)),
+                  ),
+                  TextButton(
+                    onPressed: () => setState(() => selectedTab = 'completed'),
+                    child: Text("Completed Vaccines",
+                        style: TextStyle(fontSize: 18, fontWeight: selectedTab == 'completed' ? FontWeight.bold : FontWeight.normal)),
+                  ),
+                ],
+              ),
+
+              // ✅ Vaccine List
+              Expanded(
+                child: ListView.builder(
+                  itemCount: selectedTab == 'remaining' ? remainingVaccines.length : completedVaccines.length,
+                  itemBuilder: (context, index) {
+                    final vaccine = selectedTab == 'remaining' ? remainingVaccines[index] : completedVaccines[index];
+                    return Card(
+                      margin: EdgeInsets.all(8),
+                      child: ListTile(
+                        title: Text(vaccine['name'], style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        subtitle: Text("Age Group: ${vaccine['age_group']}\n${vaccine['description']}"),
+                        trailing: Icon(
+                          selectedTab == 'remaining' ? Icons.schedule : Icons.check_circle,
+                          color: selectedTab == 'remaining' ? Colors.orange : Colors.green,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          );
   }
 }
