@@ -15,8 +15,8 @@ class _HomeScreenState extends State<HomeScreen> {
   bool isLoading = true;
   List<Map<String, dynamic>> completedVaccines = [];
   List<Map<String, dynamic>> remainingVaccines = [];
-  String selectedTab = 'remaining'; // Default to Remaining Vaccines
-  int _selectedIndex = 0; // Track selected tab
+  String selectedTab = 'remaining'; 
+  int _selectedIndex = 0;
 
   @override
   void initState() {
@@ -24,7 +24,6 @@ class _HomeScreenState extends State<HomeScreen> {
     _fetchVaccinationData();
   }
 
-  /// ✅ Convert Age Group to Comparable Number for Sorting
   int _convertAgeToNumber(String ageGroup) {
     if (ageGroup.toLowerCase() == "birth") return 0;
 
@@ -47,7 +46,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return 99999;
   }
 
-  /// ✅ Fetch Vaccination Data
   Future<void> _fetchVaccinationData() async {
     setState(() => isLoading = true);
 
@@ -103,7 +101,6 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() => isLoading = false);
   }
 
-  /// ✅ Logout Function
   void _logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('user_email');
@@ -167,7 +164,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// ✅ Build Home Page with Vaccine List
   Widget _buildHomePage() {
     return isLoading
         ? Center(child: CircularProgressIndicator())

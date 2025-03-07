@@ -34,12 +34,11 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Vaccine Care',
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: AuthRedirectScreen(), // ✅ Redirect to correct screen
+      home: AuthRedirectScreen(), 
     );
   }
 }
 
-// Redirects based on authentication state
 class AuthRedirectScreen extends StatelessWidget {
   final _supabase = Supabase.instance.client;
 
@@ -52,9 +51,9 @@ class AuthRedirectScreen extends StatelessWidget {
         print("🔹 App Started - Current Session: ${session?.toJson()}"); // Debugging
 
         if (session != null && session.user != null) {
-          return HomeScreen(); // ✅ Redirect to Home if logged in
+          return HomeScreen(); 
         } else {
-          return AuthScreen(); // ✅ Show Login/Sign-Up
+          return AuthScreen(); 
         }
       },
     );

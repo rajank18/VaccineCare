@@ -61,7 +61,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-            builder: (context) => AuthScreen()), // Redirect to login page
+            builder: (context) => AuthScreen()), 
       );
     }
   }
