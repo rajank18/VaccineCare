@@ -72,7 +72,10 @@ class _UserProfilePageState extends State<UserProfilePage> {
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.blue.shade100, const Color.fromARGB(255, 235, 235, 235)],
+            colors: [
+              Colors.blue.shade100,
+              const Color.fromARGB(255, 235, 235, 235)
+            ],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -127,7 +130,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                           style: TextStyle(
                                               fontSize: 18,
                                               fontWeight: FontWeight.bold,
-                                              color: Colors.white)),
+                                              color: const Color.fromARGB(
+                                                  255, 7, 5, 5))),
                                       SizedBox(height: 10),
                                       ...babyData.map((baby) => _buildCard([
                                             _buildUserInfoTile("Name",
