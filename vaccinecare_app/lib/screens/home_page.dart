@@ -132,12 +132,7 @@ class _HomeScreenState extends State<HomeScreen> {
             color: const Color.fromARGB(255, 40, 100, 202),
           ),
         ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.logout, color: Colors.blue),
-            onPressed: _logout,
-          ),
-        ],
+        
       ),
       body: Container(
         decoration: BoxDecoration(

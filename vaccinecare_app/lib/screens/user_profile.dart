@@ -94,7 +94,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: [
                                 IconButton(
-                                  icon: Icon(Icons.logout,
+                                  icon: Icon(Icons.power_settings_new,
                                       color: Colors.white, size: 30),
                                   onPressed: signOut,
                                 ),
