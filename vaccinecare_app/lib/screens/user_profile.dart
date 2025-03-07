@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vaccinecare_app/screens/auth_page.dart';
-import 'package:vaccinecare_app/screens/auth_page.dart';
 import 'package:vaccinecare_app/screens/vaccine_track_record.dart';
 
 class UserProfilePage extends StatefulWidget {
@@ -32,9 +31,16 @@ class _UserProfilePageState extends State<UserProfilePage> {
         return;
       }
 
-      final response = await _supabase.from('users').select().eq('email', storedEmail).maybeSingle();
+      final response = await _supabase
+          .from('users')
+          .select()
+          .eq('email', storedEmail)
+          .maybeSingle();
       if (response != null) {
-        final babyResponse = await _supabase.from('babies').select().eq('parent_id', response['user_id']);
+        final babyResponse = await _supabase
+            .from('babies')
+            .select()
+            .eq('parent_id', response['user_id']);
         setState(() {
           userData = response;
           babyData = List<Map<String, dynamic>>.from(babyResponse);
@@ -54,7 +60,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
     if (mounted) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => AuthScreen()), // Redirect to login page
+        MaterialPageRoute(
+            builder: (context) => AuthScreen()), // Redirect to login page
       );
     }
   }
@@ -65,16 +72,18 @@ class _UserProfilePageState extends State<UserProfilePage> {
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.blue[900]!, Colors.blue[600]!, Colors.blue[300]!],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+            colors: [Colors.blue.shade100, const Color.fromARGB(255, 235, 235, 235)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
         ),
         child: SafeArea(
           child: isLoading
               ? Center(child: CircularProgressIndicator())
               : userData == null
-                  ? Center(child: Text("No user data found", style: TextStyle(fontSize: 18, color: Colors.white)))
+                  ? Center(
+                      child: Text("No user data found",
+                          style: TextStyle(fontSize: 18, color: Colors.white)))
                   : Padding(
                       padding: EdgeInsets.all(16),
                       child: SingleChildScrollView(
@@ -85,7 +94,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: [
                                 IconButton(
-                                  icon: Icon(Icons.power_settings_new, color: Colors.white, size: 30),
+                                  icon: Icon(Icons.power_settings_new,
+                                      color: Colors.white, size: 30),
                                   onPressed: signOut,
                                 ),
                               ],
@@ -93,32 +103,50 @@ class _UserProfilePageState extends State<UserProfilePage> {
                             CircleAvatar(
                               radius: 50,
                               backgroundColor: Colors.white,
-                              child: Icon(Icons.person, size: 50, color: Colors.blue[900]),
+                              child: Icon(Icons.person,
+                                  size: 50, color: Colors.blue[900]),
                             ),
                             SizedBox(height: 20),
                             _buildCard([
-                              _buildUserInfoTile("Parent Name", userData!['name'], Icons.person),
-                              _buildUserInfoTile("Email", userData!['email'], Icons.email),
-                              _buildUserInfoTile("Phone", userData!['phone_number'], Icons.phone),
-                              _buildUserInfoTile("Address", userData!['address'], Icons.home),
+                              _buildUserInfoTile("Parent Name",
+                                  userData!['name'], Icons.person),
+                              _buildUserInfoTile(
+                                  "Email", userData!['email'], Icons.email),
+                              _buildUserInfoTile("Phone",
+                                  userData!['phone_number'], Icons.phone),
+                              _buildUserInfoTile(
+                                  "Address", userData!['address'], Icons.home),
                             ]),
                             SizedBox(height: 20),
                             babyData.isNotEmpty
                                 ? Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text("Baby Details",
-                                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                                          style: TextStyle(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.white)),
                                       SizedBox(height: 10),
                                       ...babyData.map((baby) => _buildCard([
-                                            _buildUserInfoTile("Name", baby['name'], Icons.child_care),
-                                            _buildUserInfoTile("Birth Date", baby['birth_date'], Icons.cake),
-                                            _buildUserInfoTile("Gender", baby['gender'], Icons.wc),
-                                            _buildUserInfoTile("Blood Group", baby['blood_group'] ?? "N/A", Icons.bloodtype),
+                                            _buildUserInfoTile("Name",
+                                                baby['name'], Icons.child_care),
+                                            _buildUserInfoTile("Birth Date",
+                                                baby['birth_date'], Icons.cake),
+                                            _buildUserInfoTile("Gender",
+                                                baby['gender'], Icons.wc),
+                                            _buildUserInfoTile(
+                                                "Blood Group",
+                                                baby['blood_group'] ?? "N/A",
+                                                Icons.bloodtype),
                                           ]))
                                     ],
                                   )
-                                : Center(child: Text("No baby details found", style: TextStyle(fontSize: 16, color: Colors.white)))
+                                : Center(
+                                    child: Text("No baby details found",
+                                        style: TextStyle(
+                                            fontSize: 16, color: Colors.white)))
                           ],
                         ),
                       ),
@@ -147,11 +175,15 @@ class _UserProfilePageState extends State<UserProfilePage> {
           leading: Icon(icon, color: Colors.blue[900]),
           title: Text(
             label,
-            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: Colors.black87),
+            style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 15,
+                color: Colors.black87),
           ),
           subtitle: Text(
             value,
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.black),
+            style: TextStyle(
+                fontSize: 14, fontWeight: FontWeight.w500, color: Colors.black),
             overflow: TextOverflow.ellipsis,
             maxLines: 2,
           ),

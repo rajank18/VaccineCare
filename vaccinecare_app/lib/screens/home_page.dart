@@ -111,65 +111,61 @@ class _HomeScreenState extends State<HomeScreen> {
         context, MaterialPageRoute(builder: (context) => AuthScreen()));
   }
 
-@override
-Widget build(BuildContext context) {
-  final List<Widget> pages = [
-    _buildHomePage(),
-    VaccinationRecordsPage(),
-    UserProfilePage(),
-  ];
+  @override
+  Widget build(BuildContext context) {
+    final List<Widget> pages = [
+      _buildHomePage(),
+      VaccinationRecordsPage(),
+      UserProfilePage(),
+    ];
 
-  return Scaffold(
-    appBar: AppBar(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-      flexibleSpace: Container(
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
+        title: Text(
+          "VaccineCare",
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            color: const Color.fromARGB(255, 40, 100, 202),
+          ),
+        ),
+        
+      ),
+      body: Container(
         decoration: BoxDecoration(
-          color: Colors.white
+          gradient: LinearGradient(
+            colors: [Colors.blue.shade50, Colors.blue.shade100],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
         ),
+        child: pages[_selectedIndex],
       ),
-      centerTitle: true,
-      title: Text(
-        "VaccineCare",
-        style: TextStyle(
-          fontSize: 22,
-          fontWeight: FontWeight.bold,
-          color: const Color.fromARGB(255, 40, 100, 202),
-        ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.list),
+            label: 'Track Record',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Profile',
+          ),
+        ],
+        currentIndex: _selectedIndex,
+        selectedItemColor: Colors.blue,
+        unselectedItemColor: Colors.grey,
+        onTap: (index) => setState(() => _selectedIndex = index),
       ),
-    ),
-    body: Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.blue.shade300, Colors.blue.shade800],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-      ),
-      child: pages[_selectedIndex],
-    ),
-    bottomNavigationBar: BottomNavigationBar(
-      items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home),
-          label: 'Home',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.list),
-          label: 'Track Record',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.person),
-          label: 'Profile',
-        ),
-      ],
-      currentIndex: _selectedIndex,
-      onTap: (index) => setState(() => _selectedIndex = index),
-    ),
-  );
-}
-
-
+    );
+  }
 
   /// ✅ Build Home Page with Vaccine List
   Widget _buildHomePage() {
@@ -177,31 +173,16 @@ Widget build(BuildContext context) {
         ? Center(child: CircularProgressIndicator())
         : Column(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  TextButton(
-                    onPressed: () => setState(() => selectedTab = 'remaining'),
-                    child: Text("Remaining",
-                        style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: selectedTab == 'remaining'
-                                ? FontWeight.bold
-                                : FontWeight.normal)),
-                  ),
-                  TextButton(
-                    onPressed: () => setState(() => selectedTab = 'completed'),
-                    child: Text("Completed",
-                        style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: selectedTab == 'completed'
-                                ? FontWeight.bold
-                                : FontWeight.normal)),
-                  ),
-                ],
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildTabButton("Remaining", 'remaining'),
+                    _buildTabButton("Completed", 'completed'),
+                  ],
+                ),
               ),
-
-              // ✅ Vaccine List with Icons
               Expanded(
                 child: ListView.builder(
                   itemCount: selectedTab == 'remaining'
@@ -214,17 +195,20 @@ Widget build(BuildContext context) {
 
                     return Card(
                       margin: EdgeInsets.all(8),
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                       child: ExpansionTile(
                         title: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // ✅ Vaccine Name (Symbols Retained)
                             Text(
                               vaccine['name'],
                               style: TextStyle(
                                   fontSize: 18, fontWeight: FontWeight.bold),
                             ),
-                            // ✅ Age Group
+                            SizedBox(height: 4),
                             Text(
                               "Age Group: ${vaccine['age_group']}",
                               style: TextStyle(
@@ -242,8 +226,11 @@ Widget build(BuildContext context) {
                         ),
                         children: [
                           Padding(
-                            padding: EdgeInsets.all(10),
-                            child: Text(vaccine['description']),
+                            padding: EdgeInsets.all(16),
+                            child: Text(
+                              vaccine['description'],
+                              style: TextStyle(fontSize: 16),
+                            ),
                           ),
                         ],
                       ),
@@ -253,5 +240,30 @@ Widget build(BuildContext context) {
               ),
             ],
           );
+  }
+
+  Widget _buildTabButton(String label, String tab) {
+    return GestureDetector(
+      onTap: () => setState(() => selectedTab = tab),
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+        decoration: BoxDecoration(
+          color: selectedTab == tab ? Colors.blue : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: selectedTab == tab ? Colors.blue : Colors.grey,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight:
+                selectedTab == tab ? FontWeight.bold : FontWeight.normal,
+            color: selectedTab == tab ? Colors.white : Colors.grey,
+          ),
+        ),
+      ),
+    );
   }
 }
