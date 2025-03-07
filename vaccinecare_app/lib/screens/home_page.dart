@@ -30,10 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final storedEmail = prefs.getString('user_email');
-      if (storedEmail == null) {
-        print("⚠️ No email found in SharedPreferences");
-        return;
-      }
+      if (storedEmail == null) return;
 
       final userResponse = await _supabase
           .from('users')
@@ -41,10 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
           .eq('email', storedEmail)
           .maybeSingle();
 
-      if (userResponse == null) {
-        print("⚠️ Parent not found for email: $storedEmail");
-        return;
-      }
+      if (userResponse == null) return;
       String parentId = userResponse['user_id'];
 
       final babyResponse = await _supabase
@@ -53,10 +47,7 @@ class _HomeScreenState extends State<HomeScreen> {
           .eq('parent_id', parentId)
           .maybeSingle();
 
-      if (babyResponse == null) {
-        print("⚠️ No baby found for parent: $parentId");
-        return;
-      }
+      if (babyResponse == null) return;
       String babyId = babyResponse['baby_id'];
 
       final vaccineResponse = await _supabase
@@ -100,43 +91,64 @@ class _HomeScreenState extends State<HomeScreen> {
         context, MaterialPageRoute(builder: (context) => AuthScreen()));
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final List<Widget> pages = [
-      _buildHomePage(), 
-      VaccinationRecordsPage(),
-      UserProfilePage(),
-    ];
+ @override
+Widget build(BuildContext context) {
+  final List<Widget> pages = [
+    _buildHomePage(), 
+    VaccinationRecordsPage(),
+    UserProfilePage(),
+  ];
 
-    return Scaffold(
-      body: pages[_selectedIndex], 
-      bottomNavigationBar: BottomNavigationBar(
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.list),
-            label: 'Track Record',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
+  return Scaffold(
+    appBar: AppBar(
+      title: Text("VaccineCare", style: TextStyle(color: Colors.blueAccent)),
+      backgroundColor: const Color.fromARGB(255, 244, 238, 245),
+      actions: [
+        IconButton(
+          icon: Icon(Icons.logout, color: Colors.blueAccent),
+          onPressed: _logout,
+        ),
+      ],
+    ),
+    body: Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.blue.shade300,
+            Colors.blue.shade700,
+          ],
+        ),
       ),
-    );
-  }
+      child: pages[_selectedIndex], 
+    ),
+    bottomNavigationBar: BottomNavigationBar(
+      items: const [
+        BottomNavigationBarItem(
+          icon: Icon(Icons.home),
+          label: 'Home',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.list),
+          label: 'Track Record',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.person),
+          label: 'Profile',
+        ),
+      ],
+      currentIndex: _selectedIndex,
+      onTap: _onItemTapped,
+    ),
+  );
+}
 
   Widget _buildHomePage() {
     return isLoading
         ? Center(child: CircularProgressIndicator())
         : Column(
             children: [
-              // ✅ Toggle Buttons for Filtering
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -152,8 +164,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ],
               ),
-
-              // ✅ Vaccine List
               Expanded(
                 child: ListView.builder(
                   itemCount: selectedTab == 'remaining' ? remainingVaccines.length : completedVaccines.length,
