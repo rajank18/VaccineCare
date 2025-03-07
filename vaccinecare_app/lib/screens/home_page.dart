@@ -111,45 +111,69 @@ class _HomeScreenState extends State<HomeScreen> {
         context, MaterialPageRoute(builder: (context) => AuthScreen()));
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final List<Widget> pages = [
-      _buildHomePage(),
-      VaccinationRecordsPage(),
-      UserProfilePage(),
-    ];
+@override
+Widget build(BuildContext context) {
+  final List<Widget> pages = [
+    _buildHomePage(),
+    VaccinationRecordsPage(),
+    UserProfilePage(),
+  ];
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("VaccineCare"),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.logout),
-            onPressed: _logout,
+  return Scaffold(
+    appBar: AppBar(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      flexibleSpace: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.blue.shade400, Colors.blue.shade800],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-        ],
+        ),
       ),
-      body: pages[_selectedIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.list),
-            label: 'Track Record',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        onTap: (index) => setState(() => _selectedIndex = index),
+      centerTitle: true,
+      title: Text(
+        "VaccineCare",
+        style: TextStyle(
+          fontSize: 22,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
       ),
-    );
-  }
+    ),
+    body: Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.blue.shade300, Colors.blue.shade800],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
+      child: pages[_selectedIndex],
+    ),
+    bottomNavigationBar: BottomNavigationBar(
+      items: const [
+        BottomNavigationBarItem(
+          icon: Icon(Icons.home),
+          label: 'Home',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.list),
+          label: 'Track Record',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.person),
+          label: 'Profile',
+        ),
+      ],
+      currentIndex: _selectedIndex,
+      onTap: (index) => setState(() => _selectedIndex = index),
+    ),
+  );
+}
+
+
 
   /// ✅ Build Home Page with Vaccine List
   Widget _buildHomePage() {
@@ -162,7 +186,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   TextButton(
                     onPressed: () => setState(() => selectedTab = 'remaining'),
-                    child: Text("Remaining Vaccines",
+                    child: Text("Remaining",
                         style: TextStyle(
                             fontSize: 18,
                             fontWeight: selectedTab == 'remaining'
@@ -171,7 +195,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   TextButton(
                     onPressed: () => setState(() => selectedTab = 'completed'),
-                    child: Text("Completed Vaccines",
+                    child: Text("Completed",
                         style: TextStyle(
                             fontSize: 18,
                             fontWeight: selectedTab == 'completed'

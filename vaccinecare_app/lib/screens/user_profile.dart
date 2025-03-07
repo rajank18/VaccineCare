@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:vaccinecare_app/screens/home_page.dart';
+import 'package:vaccinecare_app/screens/auth_page.dart';
+import 'package:vaccinecare_app/screens/auth_page.dart';
 import 'package:vaccinecare_app/screens/vaccine_track_record.dart';
 
 class UserProfilePage extends StatefulWidget {
@@ -14,7 +15,6 @@ class _UserProfilePageState extends State<UserProfilePage> {
   Map<String, dynamic>? userData;
   List<Map<String, dynamic>> babyData = [];
   bool isLoading = true;
-  int _selectedIndex = 0;
 
   @override
   void didChangeDependencies() {
@@ -46,6 +46,19 @@ class _UserProfilePageState extends State<UserProfilePage> {
     setState(() => isLoading = false);
   }
 
+  Future<void> signOut() async {
+    await _supabase.auth.signOut();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('user_email');
+
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => AuthScreen()), // Redirect to login page
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -68,6 +81,15 @@ class _UserProfilePageState extends State<UserProfilePage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                IconButton(
+                                  icon: Icon(Icons.power_settings_new, color: Colors.white, size: 30),
+                                  onPressed: signOut,
+                                ),
+                              ],
+                            ),
                             CircleAvatar(
                               radius: 50,
                               backgroundColor: Colors.white,
@@ -75,7 +97,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                             ),
                             SizedBox(height: 20),
                             _buildCard([
-                              _buildUserInfoTile("Name", userData!['name'], Icons.person),
+                              _buildUserInfoTile("Parent Name", userData!['name'], Icons.person),
                               _buildUserInfoTile("Email", userData!['email'], Icons.email),
                               _buildUserInfoTile("Phone", userData!['phone_number'], Icons.phone),
                               _buildUserInfoTile("Address", userData!['address'], Icons.home),
@@ -131,7 +153,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
             value,
             style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.black),
             overflow: TextOverflow.ellipsis,
-            maxLines: 2, // Ensures text fits small devices
+            maxLines: 2,
           ),
         ),
         Divider(),
