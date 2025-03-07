@@ -88,8 +88,7 @@ class _AuthScreenState extends State<AuthScreen> {
   //     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.toString())));
   //   }
   // }
-
-  Future<void> authenticateUser() async {
+Future<void> authenticateUser() async {
   if (!_formKey.currentState!.validate()) return;
   _formKey.currentState!.save();
 
@@ -119,10 +118,8 @@ class _AuthScreenState extends State<AuthScreen> {
     } else {
       // ✅ Sign-Up User
       final response = await _supabase.auth.signUp(email: email, password: password);
-
       if (response.user != null) {
-        // ✅ Insert user details into `users` table
-        final insertResponse = await _supabase.from('users').insert({
+        await _supabase.from('users').insert({
           'user_id': response.user!.id,
           'name': name,
           'email': email,
@@ -133,30 +130,11 @@ class _AuthScreenState extends State<AuthScreen> {
           'updated_at': DateTime.now().toIso8601String(),
         });
 
-        if (insertResponse.error != null) {
-          print("❌ Error inserting user into database: ${insertResponse.error!.message}");
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error creating account')));
-          return;
-        }
-
-        print("✅ User data stored in Supabase `users` table.");
-
-        // ✅ Store email locally for fetching user data later
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('user_email', email);
-        print("✅ Email stored locally after sign-up: $email");
-
-        // ✅ Auto log in after sign-up
-        await _supabase.auth.signInWithPassword(email: email, password: password);
-
-        // ✅ Navigate to BabyDetailsPage
+        // ✅ New user → Go to BabyDetailsPage
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => BabyDetailsPage(parentId: response.user!.id)),
         );
-      } else {
-        print("❌ Sign-up failed");
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Sign-up failed')));
       }
     }
   } catch (error) {
