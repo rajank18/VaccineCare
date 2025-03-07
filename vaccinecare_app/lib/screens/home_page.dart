@@ -153,12 +153,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   TextButton(
                     onPressed: () => setState(() => selectedTab = 'remaining'),
-                    child: Text("Remaining Vaccines",
+                    child: Text("Remaining",
                         style: TextStyle(fontSize: 18, fontWeight: selectedTab == 'remaining' ? FontWeight.bold : FontWeight.normal)),
                   ),
                   TextButton(
                     onPressed: () => setState(() => selectedTab = 'completed'),
-                    child: Text("Completed Vaccines",
+                    child: Text("Completed",
                         style: TextStyle(fontSize: 18, fontWeight: selectedTab == 'completed' ? FontWeight.bold : FontWeight.normal)),
                   ),
                 ],
