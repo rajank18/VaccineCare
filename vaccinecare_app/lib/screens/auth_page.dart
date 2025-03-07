@@ -58,7 +58,6 @@ class _AuthScreenState extends State<AuthScreen> {
       if (response != null) {
         String parentId = response['user_id'];
 
-        // ✅ Store email locally after login
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('user_email', email);
         print("✅ Email stored locally: $email");
@@ -69,7 +68,6 @@ class _AuthScreenState extends State<AuthScreen> {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Invalid email or password')));
       }
     } else {
-      // ✅ Sign-Up User
       final response = await _supabase.auth.signUp(email: email, password: password);
       if (response.user != null) {
         await _supabase.from('users').insert({
@@ -83,7 +81,6 @@ class _AuthScreenState extends State<AuthScreen> {
           'updated_at': DateTime.now().toIso8601String(),
         });
 
-        // ✅ New user → Go to BabyDetailsPage
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => BabyDetailsPage(parentId: response.user!.id)),

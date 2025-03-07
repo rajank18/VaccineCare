@@ -18,7 +18,6 @@ void main() async {
 
 
   final supabase = Supabase.instance.client;
-  // await supabase.auth.recoverSession(); // ✅ Ensures session is restored
 
   runApp(MyApp(isLoggedIn: storedEmail != null));
 }

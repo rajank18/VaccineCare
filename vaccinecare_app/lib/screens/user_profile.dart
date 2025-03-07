@@ -47,7 +47,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
     setState(() => isLoading = false);
 
     void _onItemTapped(int index) {
-    if (index == _selectedIndex) return; // Prevent unnecessary navigation
+    if (index == _selectedIndex) return; 
 
     switch (index) {
       case 0:

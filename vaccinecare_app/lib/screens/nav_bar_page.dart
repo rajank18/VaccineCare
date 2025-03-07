@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'home_page.dart';
 import 'vaccine_track_record.dart';
 import 'user_profile.dart';
-import 'auth_page.dart'; // For logout
+import 'auth_page.dart'; 
 
 class NavBarPage extends StatefulWidget {
   @override
@@ -10,7 +10,7 @@ class NavBarPage extends StatefulWidget {
 }
 
 class _NavBarPageState extends State<NavBarPage> {
-  int _selectedIndex = 0; // Default HomeScreen
+  int _selectedIndex = 0; 
 
   final List<Widget> _pages = [
     HomeScreen(),
@@ -43,7 +43,7 @@ class _NavBarPageState extends State<NavBarPage> {
           ),
         ],
       ),
-      body: _pages[_selectedIndex], // Display selected page
+      body: _pages[_selectedIndex], 
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
