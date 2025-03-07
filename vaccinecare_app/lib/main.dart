@@ -51,7 +51,7 @@ class AuthRedirectScreen extends StatelessWidget {
         print("🔹 App Started - Current Session: ${session?.toJson()}"); // Debugging
 
         if (session != null && session.user != null) {
-          return HomeScreen(); 
+          return AuthScreen(); 
         } else {
           return AuthScreen(); 
         }

@@ -25,35 +25,41 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 
   Future<void> checkBabyDetailsAndNavigate(String parentId) async {
-    final response = await _supabase
-        .from('babies')
-        .select()
-        .eq('parent_id', parentId)
-        .maybeSingle();
+  final response = await _supabase
+      .from('babies')
+      .select()
+      .eq('parent_id', parentId)
+      .maybeSingle();
 
-    if (response != null) {
-      Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (context) => HomeScreen()));
-    } else {
-      Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-              builder: (context) => BabyDetailsPage(parentId: parentId)));
-    }
+  if (response != null) {
+    // ✅ Baby details exist, go to HomePage
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => HomeScreen()),
+    );
+  } else {
+    // ❌ Baby details do not exist, go to BabyDetailsPage
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => BabyDetailsPage(parentId: parentId)),
+    );
   }
+}
+
 
   Future<void> authenticateUser() async {
-    if (!_formKey.currentState!.validate()) return;
-    _formKey.currentState!.save();
+  if (!_formKey.currentState!.validate()) return;
+  _formKey.currentState!.save();
 
-    try {
-      if (isLogin) {
-        final response = await _supabase
-            .from('users')
-            .select()
-            .eq('email', email)
-            .eq('password_hash', hashPassword(password))
-            .maybeSingle();
+  try {
+    if (isLogin) {
+      // LOGIN FLOW
+      final response = await _supabase
+          .from('users')
+          .select()
+          .eq('email', email)
+          .eq('password_hash', hashPassword(password))
+          .maybeSingle();
 
       if (response != null) {
         String parentId = response['user_id'];
@@ -62,16 +68,20 @@ class _AuthScreenState extends State<AuthScreen> {
         await prefs.setString('user_email', email);
         print("✅ Email stored locally: $email");
 
+        // Check if baby details exist and navigate accordingly
         await checkBabyDetailsAndNavigate(parentId);
       } else {
         print("❌ Invalid email or password");
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Invalid email or password')));
       }
     } else {
+      // SIGN-UP FLOW
       final response = await _supabase.auth.signUp(email: email, password: password);
       if (response.user != null) {
+        String parentId = response.user!.id;
+
         await _supabase.from('users').insert({
-          'user_id': response.user!.id,
+          'user_id': parentId, // Ensure parent_id is stored correctly
           'name': name,
           'email': email,
           'phone_number': phone,
@@ -81,10 +91,14 @@ class _AuthScreenState extends State<AuthScreen> {
           'updated_at': DateTime.now().toIso8601String(),
         });
 
+        // ✅ Directly go to BabyDetailsPage after Sign-Up (Skip checking baby details)
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => BabyDetailsPage(parentId: response.user!.id)),
+          MaterialPageRoute(builder: (context) => BabyDetailsPage(parentId: parentId)),
         );
+      } else {
+        print("❌ Sign-up failed: ${response.error?.message}");
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Sign-up failed: ${response.error?.message}')));
       }
     }
   } catch (error) {
@@ -92,6 +106,7 @@ class _AuthScreenState extends State<AuthScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.toString())));
   }
 }
+
 
   @override
   Widget build(BuildContext context) {
@@ -221,4 +236,8 @@ class _AuthScreenState extends State<AuthScreen> {
       ),
     );
   }
+}
+
+extension on AuthResponse {
+  get error => null;
 }

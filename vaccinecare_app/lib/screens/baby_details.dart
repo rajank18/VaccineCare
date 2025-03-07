@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:vaccinecare_app/screens/auth_page.dart';
 import '../screens/home_page.dart';
 import 'package:intl/intl.dart';
 
@@ -60,7 +61,7 @@ class _BabyDetailsPageState extends State<BabyDetailsPage> {
       });
 
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Baby details saved successfully!")));
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreen()));
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => AuthScreen()));
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.toString())));
     }
