@@ -8,4 +8,4 @@ Team Eureka, Team Number - 38
    - Manav Majmudar
    - Harsh Donda
 
-Go to the ##master branch
+Go to the #master branch
