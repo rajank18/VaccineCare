@@ -72,7 +72,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.blue.shade300, Colors.blue.shade800],
+            colors: [Colors.blue.shade100, const Color.fromARGB(255, 235, 235, 235)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),

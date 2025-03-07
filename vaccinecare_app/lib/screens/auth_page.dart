@@ -100,7 +100,7 @@ class _AuthScreenState extends State<AuthScreen> {
         padding: EdgeInsets.symmetric(horizontal: 24),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.purple, Colors.blue, Colors.cyan],
+            colors: [Colors.purple.shade200, Colors.blue.shade100, Colors.blue.shade400],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -114,8 +114,8 @@ class _AuthScreenState extends State<AuthScreen> {
                   text: TextSpan(
                     style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                     children: [
-                      TextSpan(text: 'Vaccine', style: TextStyle(color: Colors.black)),
-                      TextSpan(text: 'Care', style: TextStyle(color: const Color.fromARGB(255, 189, 188, 188))),
+                      TextSpan(text: 'Vaccine', style: TextStyle(color: const Color.fromARGB(255, 0, 0, 0))),
+                      TextSpan(text: 'Care', style: TextStyle(color: const Color.fromARGB(255, 225, 39, 203))),
                     ],
                   ),
                 ),
