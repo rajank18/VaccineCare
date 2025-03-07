@@ -169,13 +169,13 @@ const Certificate = () => {
       <Toaster position="top-right" richColors />
       
       <div className="container mx-auto p-6 space-y-8">
-        <div className="glass-effect rounded-2xl p-8 stagger-animation">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <div className="glass-effect rounded-2xl   stagger-animation">
+          <div className="flex flex-col bg-blue-500 p-8 rounded-xl md:flex-row justify-between items-start md:items-center gap-6">
             <div>
-              <h1 className="text-4xl font-bold text-gray-800 float-icon mb-2">
+              <h1 className="text-4xl font-bold text-white float-icon mb-2">
                 Vaccination Certificates
               </h1>
-              <p className="text-gray-600">
+              <p className="text-gray-300">
                 Manage and track vaccination records efficiently
               </p>
             </div>
@@ -183,7 +183,7 @@ const Certificate = () => {
             <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
               <div className="flex flex-col sm:flex-row gap-4">
                 <div className="date-picker">
-                  <Label className="text-sm font-medium text-gray-700">Start Date</Label>
+                  <Label className="text-sm font-medium text-white">Start Date</Label>
                   <div className="relative">
                     <Input
                       type="date"
@@ -197,7 +197,7 @@ const Certificate = () => {
                 </div>
 
                 <div className="date-picker">
-                  <Label className="text-sm font-medium text-gray-700">End Date</Label>
+                  <Label className="text-sm font-medium text-white">End Date</Label>
                   <div className="relative">
                     <Input
                       type="date"
