@@ -15,8 +15,8 @@ class _HomeScreenState extends State<HomeScreen> {
   bool isLoading = true;
   List<Map<String, dynamic>> completedVaccines = [];
   List<Map<String, dynamic>> remainingVaccines = [];
-  String selectedTab = 'remaining'; 
-  int _selectedIndex = 0;
+  String selectedTab = 'remaining'; // Default to Remaining Vaccines
+  int _selectedIndex = 0; // Track selected tab
 
   @override
   void initState() {
@@ -24,6 +24,30 @@ class _HomeScreenState extends State<HomeScreen> {
     _fetchVaccinationData();
   }
 
+  /// ✅ Convert Age Group to Comparable Number for Sorting
+  int _convertAgeToNumber(String ageGroup) {
+    if (ageGroup.toLowerCase() == "birth") return 0;
+
+    final RegExp weekRegex = RegExp(r"(\d+)\s*weeks?");
+    final RegExp monthRegex = RegExp(r"(\d+)\s*months?");
+    final RegExp yearRegex = RegExp(r"(\d+)\s*years?");
+
+    if (weekRegex.hasMatch(ageGroup)) {
+      return int.parse(weekRegex.firstMatch(ageGroup)!.group(1)!) * 7;
+    }
+
+    if (monthRegex.hasMatch(ageGroup)) {
+      return int.parse(monthRegex.firstMatch(ageGroup)!.group(1)!) * 30;
+    }
+
+    if (yearRegex.hasMatch(ageGroup)) {
+      return int.parse(yearRegex.firstMatch(ageGroup)!.group(1)!) * 365;
+    }
+
+    return 99999;
+  }
+
+  /// ✅ Fetch Vaccination Data
   Future<void> _fetchVaccinationData() async {
     setState(() => isLoading = true);
 
@@ -50,13 +74,12 @@ class _HomeScreenState extends State<HomeScreen> {
       if (babyResponse == null) return;
       String babyId = babyResponse['baby_id'];
 
-      final vaccineResponse = await _supabase
-          .from('vaccines')
-          .select()
-          .order('age_group', ascending: true);
+      final vaccineResponse = await _supabase.from('vaccines').select();
 
       List<Map<String, dynamic>> allVaccines =
           List<Map<String, dynamic>>.from(vaccineResponse);
+      allVaccines.sort((a, b) => _convertAgeToNumber(a['age_group'])
+          .compareTo(_convertAgeToNumber(b['age_group'])));
 
       final completedResponse = await _supabase
           .from('vaccination_records')
@@ -67,10 +90,12 @@ class _HomeScreenState extends State<HomeScreen> {
           .map<String>((v) => v['vaccine_id'].toString())
           .toList();
 
-      completedVaccines =
-          allVaccines.where((v) => completedIds.contains(v['vaccine_id'])).toList();
-      remainingVaccines =
-          allVaccines.where((v) => !completedIds.contains(v['vaccine_id'])).toList();
+      completedVaccines = allVaccines
+          .where((v) => completedIds.contains(v['vaccine_id']))
+          .toList();
+      remainingVaccines = allVaccines
+          .where((v) => !completedIds.contains(v['vaccine_id']))
+          .toList();
     } catch (error) {
       print("❌ Error fetching vaccination data: $error");
     }
@@ -78,72 +103,55 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() => isLoading = false);
   }
 
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index; 
-    });
-  }
-
+  /// ✅ Logout Function
   void _logout() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('user_email'); 
+    await prefs.remove('user_email');
     Navigator.pushReplacement(
         context, MaterialPageRoute(builder: (context) => AuthScreen()));
   }
 
- @override
-Widget build(BuildContext context) {
-  final List<Widget> pages = [
-    _buildHomePage(), 
-    VaccinationRecordsPage(),
-    UserProfilePage(),
-  ];
+  @override
+  Widget build(BuildContext context) {
+    final List<Widget> pages = [
+      _buildHomePage(),
+      VaccinationRecordsPage(),
+      UserProfilePage(),
+    ];
 
-  return Scaffold(
-    appBar: AppBar(
-      title: Text("VaccineCare", style: TextStyle(color: Colors.blueAccent)),
-      backgroundColor: const Color.fromARGB(255, 244, 238, 245),
-      actions: [
-        IconButton(
-          icon: Icon(Icons.logout, color: Colors.blueAccent),
-          onPressed: _logout,
-        ),
-      ],
-    ),
-    body: Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.blue.shade300,
-            Colors.blue.shade700,
-          ],
-        ),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("VaccineCare"),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.logout),
+            onPressed: _logout,
+          ),
+        ],
       ),
-      child: pages[_selectedIndex], 
-    ),
-    bottomNavigationBar: BottomNavigationBar(
-      items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home),
-          label: 'Home',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.list),
-          label: 'Track Record',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.person),
-          label: 'Profile',
-        ),
-      ],
-      currentIndex: _selectedIndex,
-      onTap: _onItemTapped,
-    ),
-  );
-}
+      body: pages[_selectedIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.list),
+            label: 'Track Record',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Profile',
+          ),
+        ],
+        currentIndex: _selectedIndex,
+        onTap: (index) => setState(() => _selectedIndex = index),
+      ),
+    );
+  }
 
+  /// ✅ Build Home Page with Vaccine List
   Widget _buildHomePage() {
     return isLoading
         ? Center(child: CircularProgressIndicator())
@@ -154,30 +162,70 @@ Widget build(BuildContext context) {
                 children: [
                   TextButton(
                     onPressed: () => setState(() => selectedTab = 'remaining'),
-                    child: Text("Remaining",
-                        style: TextStyle(fontSize: 18, fontWeight: selectedTab == 'remaining' ? FontWeight.bold : FontWeight.normal)),
+                    child: Text("Remaining Vaccines",
+                        style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: selectedTab == 'remaining'
+                                ? FontWeight.bold
+                                : FontWeight.normal)),
                   ),
                   TextButton(
                     onPressed: () => setState(() => selectedTab = 'completed'),
-                    child: Text("Completed",
-                        style: TextStyle(fontSize: 18, fontWeight: selectedTab == 'completed' ? FontWeight.bold : FontWeight.normal)),
+                    child: Text("Completed Vaccines",
+                        style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: selectedTab == 'completed'
+                                ? FontWeight.bold
+                                : FontWeight.normal)),
                   ),
                 ],
               ),
+
+              // ✅ Vaccine List with Icons
               Expanded(
                 child: ListView.builder(
-                  itemCount: selectedTab == 'remaining' ? remainingVaccines.length : completedVaccines.length,
+                  itemCount: selectedTab == 'remaining'
+                      ? remainingVaccines.length
+                      : completedVaccines.length,
                   itemBuilder: (context, index) {
-                    final vaccine = selectedTab == 'remaining' ? remainingVaccines[index] : completedVaccines[index];
+                    final vaccine = selectedTab == 'remaining'
+                        ? remainingVaccines[index]
+                        : completedVaccines[index];
+
                     return Card(
                       margin: EdgeInsets.all(8),
-                      child: ListTile(
-                        title: Text(vaccine['name'], style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                        subtitle: Text("Age Group: ${vaccine['age_group']}\n${vaccine['description']}"),
-                        trailing: Icon(
-                          selectedTab == 'remaining' ? Icons.schedule : Icons.check_circle,
-                          color: selectedTab == 'remaining' ? Colors.orange : Colors.green,
+                      child: ExpansionTile(
+                        title: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // ✅ Vaccine Name (Symbols Retained)
+                            Text(
+                              vaccine['name'],
+                              style: TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                            // ✅ Age Group
+                            Text(
+                              "Age Group: ${vaccine['age_group']}",
+                              style: TextStyle(
+                                  fontSize: 16, color: Colors.grey[600]),
+                            ),
+                          ],
                         ),
+                        trailing: Icon(
+                          selectedTab == 'remaining'
+                              ? Icons.schedule
+                              : Icons.check_circle,
+                          color: selectedTab == 'remaining'
+                              ? Colors.orange
+                              : Colors.green,
+                        ),
+                        children: [
+                          Padding(
+                            padding: EdgeInsets.all(10),
+                            child: Text(vaccine['description']),
+                          ),
+                        ],
                       ),
                     );
                   },
