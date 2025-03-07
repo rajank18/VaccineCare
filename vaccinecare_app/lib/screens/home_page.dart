@@ -125,11 +125,7 @@ Widget build(BuildContext context) {
       elevation: 0,
       flexibleSpace: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.blue.shade400, Colors.blue.shade800],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          color: Colors.white
         ),
       ),
       centerTitle: true,
@@ -138,7 +134,7 @@ Widget build(BuildContext context) {
         style: TextStyle(
           fontSize: 22,
           fontWeight: FontWeight.bold,
-          color: Colors.white,
+          color: const Color.fromARGB(255, 40, 100, 202),
         ),
       ),
     ),
