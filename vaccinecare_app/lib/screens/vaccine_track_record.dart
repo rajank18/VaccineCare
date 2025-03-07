@@ -226,7 +226,6 @@ class _VaccinationRecordsPageState extends State<VaccinationRecordsPage> {
     }
   }
 
-  /// ✅ Function to View Certificate
   void _viewCertificate(String url) async {
     if (await canLaunch(url)) {
       await launch(url);
@@ -261,7 +260,6 @@ class _VaccinationRecordsPageState extends State<VaccinationRecordsPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            /// **Vaccine Name (Large and Bold)**
                             Text(
                               record['vaccines']['name'] ?? 'N/A',
                               style: TextStyle(
@@ -272,7 +270,6 @@ class _VaccinationRecordsPageState extends State<VaccinationRecordsPage> {
                             ),
                             SizedBox(height: 8),
 
-                            /// **Dose Number**
                             Row(
                               children: [
                                 Icon(Icons.local_hospital, color: Colors.blueAccent, size: 20),
@@ -283,7 +280,6 @@ class _VaccinationRecordsPageState extends State<VaccinationRecordsPage> {
                             ),
                             SizedBox(height: 8),
 
-                            /// **Date Administered (Renamed to Applied On)**
                             Row(
                               children: [
                                 Icon(Icons.calendar_today, color: Colors.green, size: 20),
@@ -294,7 +290,6 @@ class _VaccinationRecordsPageState extends State<VaccinationRecordsPage> {
                             ),
                             SizedBox(height: 8),
 
-                            /// **Created At (Only Date)**
                             Row(
                               children: [
                                 Icon(Icons.date_range, color: Colors.orange, size: 20),
@@ -307,7 +302,6 @@ class _VaccinationRecordsPageState extends State<VaccinationRecordsPage> {
                             ),
                             SizedBox(height: 12),
 
-                            /// **View Certificate Button (Styled)**
                             record['certificate_url'] != null
                                 ? Container(
                                     width: double.infinity,

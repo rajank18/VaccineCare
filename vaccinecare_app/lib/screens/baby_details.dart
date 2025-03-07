@@ -18,11 +18,10 @@ class _BabyDetailsPageState extends State<BabyDetailsPage> {
   final TextEditingController _birthDateController = TextEditingController();
   final TextEditingController _birthPlaceController = TextEditingController();
   
-  String? _gender; // ✅ Gender selection
+  String? _gender; 
   String? _bloodGroup;
   bool _hasDisability = false;
 
-  /// Opens a date picker and updates birth date field
   Future<void> _selectBirthDate(BuildContext context) async {
     DateTime? pickedDate = await showDatePicker(
       context: context,
@@ -32,11 +31,10 @@ class _BabyDetailsPageState extends State<BabyDetailsPage> {
     );
 
     if (pickedDate != null) {
-      _birthDateController.text = DateFormat('yyyy-MM-dd').format(pickedDate); // ✅ Format date
+      _birthDateController.text = DateFormat('yyyy-MM-dd').format(pickedDate);
     }
   }
 
-  /// Saves baby details to Supabase
   Future<void> _submitForm() async {
     if (_nameController.text.isEmpty ||
         _birthDateController.text.isEmpty ||
@@ -49,13 +47,13 @@ class _BabyDetailsPageState extends State<BabyDetailsPage> {
 
     try {
       await _supabase.from('babies').insert({
-        'parent_id': widget.parentId, // ✅ Link baby to parent
+        'parent_id': widget.parentId, 
         'name': _nameController.text,
         'birth_date': _birthDateController.text,
         'birthplace': _birthPlaceController.text,
-        'gender': _gender, // ✅ Added gender field
+        'gender': _gender, 
         'blood_group': _bloodGroup,
-        'health_score': 0, // ✅ Default value
+        'health_score': 0, 
         'is_disabled': _hasDisability,
         'created_at': DateTime.now().toIso8601String(),
         'updated_at': DateTime.now().toIso8601String(),
@@ -77,27 +75,23 @@ class _BabyDetailsPageState extends State<BabyDetailsPage> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              // Baby's Name
               TextField(
                 controller: _nameController,
                 decoration: InputDecoration(labelText: "Baby's Name"),
               ),
               
-              // Birth Date Picker (Opens Calendar on Tap)
               TextField(
                 controller: _birthDateController,
                 readOnly: true,
                 decoration: InputDecoration(labelText: "Birth Date"),
-                onTap: () => _selectBirthDate(context), // ✅ Opens Calendar Picker
+                onTap: () => _selectBirthDate(context), 
               ),
 
-              // Birthplace
               TextField(
                 controller: _birthPlaceController,
                 decoration: InputDecoration(labelText: "Birth Place"),
               ),
 
-              // Gender Dropdown
               DropdownButtonFormField<String>(
                 value: _gender,
                 items: ['male', 'female', 'other']
@@ -107,7 +101,6 @@ class _BabyDetailsPageState extends State<BabyDetailsPage> {
                 decoration: InputDecoration(labelText: "Gender"),
               ),
 
-              // Blood Group Dropdown
               DropdownButtonFormField<String>(
                 value: _bloodGroup,
                 items: ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"]
@@ -118,7 +111,6 @@ class _BabyDetailsPageState extends State<BabyDetailsPage> {
                 decoration: InputDecoration(labelText: "Blood Group"),
               ),
 
-              // Disability Checkbox
               Row(
                 children: [
                   Text("Disability:"),
@@ -145,6 +137,5 @@ class _BabyDetailsPageState extends State<BabyDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
     throw UnimplementedError();
   }
