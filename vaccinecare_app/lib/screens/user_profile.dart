@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:vaccinecare_app/screens/home_page.dart';
+import 'package:vaccinecare_app/screens/vaccine_track_record.dart';
 
 class UserProfilePage extends StatefulWidget {
   @override
@@ -12,6 +14,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
   Map<String, dynamic>? userData;
   List<Map<String, dynamic>> babyData = [];
   bool isLoading = true;
+  int _selectedIndex = 0;
 
   @override
   void didChangeDependencies() {
@@ -42,6 +45,22 @@ class _UserProfilePageState extends State<UserProfilePage> {
       print("Error fetching user data: $error");
     }
     setState(() => isLoading = false);
+
+    void _onItemTapped(int index) {
+    if (index == _selectedIndex) return; // Prevent unnecessary navigation
+
+    switch (index) {
+      case 0:
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreen()));
+        break;
+      case 1:
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => VaccinationRecordsPage()));
+        break;
+      case 2:
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => UserProfilePage()));
+        break;
+    }
+  }
   }
 
   @override

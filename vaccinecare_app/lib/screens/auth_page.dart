@@ -55,41 +55,46 @@ class _AuthScreenState extends State<AuthScreen> {
             .eq('password_hash', hashPassword(password))
             .maybeSingle();
 
-        if (response != null) {
-          String parentId = response['user_id'];
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('user_email', email);
-          await checkBabyDetailsAndNavigate(parentId);
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Invalid email or password')));
-        }
+      if (response != null) {
+        String parentId = response['user_id'];
+
+        // ✅ Store email locally after login
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('user_email', email);
+        print("✅ Email stored locally: $email");
+
+        await checkBabyDetailsAndNavigate(parentId);
       } else {
-        final response =
-            await _supabase.auth.signUp(email: email, password: password);
-        if (response.user != null) {
-          await _supabase.from('users').insert({
-            'user_id': response.user!.id,
-            'name': name,
-            'email': email,
-            'phone_number': phone,
-            'address': address,
-            'password_hash': hashPassword(password),
-            'created_at': DateTime.now().toIso8601String(),
-            'updated_at': DateTime.now().toIso8601String(),
-          });
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-                builder: (context) => BabyDetailsPage(parentId: response.user!.id)),
-          );
-        }
+        print("❌ Invalid email or password");
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Invalid email or password')));
       }
-    } catch (error) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(error.toString())));
+    } else {
+      // ✅ Sign-Up User
+      final response = await _supabase.auth.signUp(email: email, password: password);
+      if (response.user != null) {
+        await _supabase.from('users').insert({
+          'user_id': response.user!.id,
+          'name': name,
+          'email': email,
+          'phone_number': phone,
+          'address': address,
+          'password_hash': hashPassword(password),
+          'created_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTime.now().toIso8601String(),
+        });
+
+        // ✅ New user → Go to BabyDetailsPage
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => BabyDetailsPage(parentId: response.user!.id)),
+        );
+      }
     }
+  } catch (error) {
+    print("❌ Error: $error");
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.toString())));
   }
+}
 
   @override
   Widget build(BuildContext context) {

@@ -4,8 +4,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'auth_page.dart';
 import 'vaccine_track_record.dart';
 import 'user_profile.dart';
-import 'dart:async';
-
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -14,201 +12,179 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final _supabase = Supabase.instance.client;
-  int _selectedIndex = 0;
-  List<String> _checkedVaccines = [];
-  
-  final List<String> _titles = ["Home", "Vaccine Tracker", "Profile"]; 
+  bool isLoading = true;
+  List<Map<String, dynamic>> completedVaccines = [];
+  List<Map<String, dynamic>> remainingVaccines = [];
+  String selectedTab = 'remaining'; // Default to Remaining Vaccines
+  int _selectedIndex = 0; // Track selected tab
 
-  Future<void> logout(BuildContext context) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.remove('checkedVaccines'); 
+  @override
+  void initState() {
+    super.initState();
+    _fetchVaccinationData();
+  }
 
-    await _supabase.auth.signOut();
+  Future<void> _fetchVaccinationData() async {
+    setState(() => isLoading = true);
+
+    try {
+      // ✅ Get Stored Email
+      final prefs = await SharedPreferences.getInstance();
+      final storedEmail = prefs.getString('user_email');
+      if (storedEmail == null) {
+        print("⚠️ No email found in SharedPreferences");
+        return;
+      }
+
+      // ✅ Find Parent ID
+      final userResponse = await _supabase
+          .from('users')
+          .select('user_id')
+          .eq('email', storedEmail)
+          .maybeSingle();
+
+      if (userResponse == null) {
+        print("⚠️ Parent not found for email: $storedEmail");
+        return;
+      }
+      String parentId = userResponse['user_id'];
+
+      // ✅ Get Baby ID
+      final babyResponse = await _supabase
+          .from('babies')
+          .select('baby_id')
+          .eq('parent_id', parentId)
+          .maybeSingle();
+
+      if (babyResponse == null) {
+        print("⚠️ No baby found for parent: $parentId");
+        return;
+      }
+      String babyId = babyResponse['baby_id'];
+
+      // ✅ Fetch All Vaccines Sorted by Age Group
+      final vaccineResponse = await _supabase
+          .from('vaccines')
+          .select()
+          .order('age_group', ascending: true);
+
+      List<Map<String, dynamic>> allVaccines = List<Map<String, dynamic>>.from(vaccineResponse);
+
+      // ✅ Fetch Completed Vaccines
+      final completedResponse = await _supabase
+          .from('vaccination_records')
+          .select('vaccine_id')
+          .eq('baby_id', babyId);
+
+      List<String> completedIds = completedResponse.map<String>((v) => v['vaccine_id'].toString()).toList();
+
+      // ✅ Separate Completed & Remaining
+      completedVaccines = allVaccines.where((v) => completedIds.contains(v['vaccine_id'])).toList();
+      remainingVaccines = allVaccines.where((v) => !completedIds.contains(v['vaccine_id'])).toList();
+    } catch (error) {
+      print("❌ Error fetching vaccination data: $error");
+    }
+
+    setState(() => isLoading = false);
+  }
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index; // Update index to change screen
+    });
+  }
+
+  void _logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('user_email'); // Remove stored email
     Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => AuthScreen()));
   }
 
   @override
-  void initState() {
-    super.initState();
-    _loadVaccineData();
-  }
-
-  Future<void> _loadVaccineData() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _checkedVaccines = prefs.getStringList('checkedVaccines') ?? [];
-    });
-  }
-
-  final List<Widget> _pages = [
-    HomePageContent(),
-    VaccinationRecordsPage(),
-    UserProfilePage(),
-  ];
-
-  @override
-Widget build(BuildContext context) {
-  return Scaffold(
-    appBar: _selectedIndex == 0
-        ? AppBar(
-            title: Text(_titles[_selectedIndex]),
-            actions: [
-              IconButton(
-                icon: Icon(Icons.power_settings_new),
-                onPressed: () => logout(context),
-              ),
-            ],
-          )
-        : null, // No AppBar for Tracker & Profile
-    body: _selectedIndex == 0 ? HomePageContent(vaccines: _checkedVaccines) : _pages[_selectedIndex],
-    bottomNavigationBar: BottomNavigationBar(
-      currentIndex: _selectedIndex,
-      onTap: (index) async {
-        if (index == 0) {
-          await _loadVaccineData();
-        }
-        setState(() {
-          _selectedIndex = index;
-        });
-      },
-      items: [
-        BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-        BottomNavigationBarItem(icon: Icon(Icons.vaccines), label: 'Tracker'),
-        BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-      ],
-    ),
-  );
-}
-
-}
-
-// Home Page Content with Vaccine Summary
-// Home Page Content with Vaccine Summary and Education Slider
-
-class HomePageContent extends StatefulWidget {
-  final List<String> vaccines;
-
-  HomePageContent({this.vaccines = const []});
-
-  @override
-  _HomePageContentState createState() => _HomePageContentState();
-}
-
-class _HomePageContentState extends State<HomePageContent> {
-  final PageController _pageController = PageController();
-  int _currentPage = 0;
-  Timer? _timer;
-
-  final List<String> educationSlides = [
-    "Vaccines help prevent serious diseases like polio, measles, and COVID-19.",
-    "Getting vaccinated protects not just you, but also those around you.",
-    "Vaccines are tested for safety and effectiveness before approval.",
-    "Some vaccines require booster doses for long-term immunity.",
-    "Side effects of vaccines are usually mild and temporary."
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    _startAutoSlide();
-  }
-
-  void _startAutoSlide() {
-    _timer = Timer.periodic(Duration(seconds: 3), (timer) {
-      if (_currentPage < educationSlides.length - 1) {
-        _currentPage++;
-      } else {
-        _currentPage = 0; // Reset to first slide
-      }
-      _pageController.animateToPage(
-        _currentPage,
-        duration: Duration(milliseconds: 500),
-        curve: Curves.easeInOut,
-      );
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    _pageController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Education Slider Section
-          SizedBox(
-            height: 150,
-            child: PageView.builder(
-              controller: _pageController,
-              itemCount: educationSlides.length,
-              onPageChanged: (index) {
-                setState(() {
-                  _currentPage = index;
-                });
-              },
-              itemBuilder: (context, index) {
-                return Card(
-                  elevation: 4,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Center(
-                      child: Text(
-                        educationSlides[index],
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-          SizedBox(height: 10),
+    // ✅ Define the pages for navigation
+    final List<Widget> pages = [
+      _buildHomePage(),
+      VaccinationRecordsPage(),
+      UserProfilePage(),
+    ];
 
-          // Dots Indicator
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(
-              educationSlides.length,
-              (index) => Container(
-                margin: EdgeInsets.symmetric(horizontal: 4),
-                width: _currentPage == index ? 10 : 6,
-                height: _currentPage == index ? 10 : 6,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: _currentPage == index ? Colors.blue : Colors.grey,
-                ),
-              ),
-            ),
-          ),
-
-          SizedBox(height: 20),
-
-          // Vaccine Summary Section
-          Text("Vaccines Applied:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          Expanded(
-            child: widget.vaccines.isEmpty
-                ? Center(child: Text("No vaccines selected yet.", style: TextStyle(fontSize: 16, color: Colors.grey)))
-                : ListView.builder(
-                    itemCount: widget.vaccines.length,
-                    itemBuilder: (context, index) {
-                      return ListTile(
-                        leading: Icon(Icons.check_circle, color: Colors.green),
-                        title: Text(widget.vaccines[index]),
-                      );
-                    },
-                  ),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("VaccineCare"),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.logout),
+            onPressed: _logout,
           ),
         ],
       ),
+      body: pages[_selectedIndex], // ✅ Display the selected page
+      bottomNavigationBar: BottomNavigationBar(
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.list),
+            label: 'Track Record',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Profile',
+          ),
+        ],
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
+      ),
     );
+  }
+
+  /// ✅ Separate home page UI
+  Widget _buildHomePage() {
+    return isLoading
+        ? Center(child: CircularProgressIndicator())
+        : Column(
+            children: [
+              // ✅ Toggle Buttons for Filtering
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  TextButton(
+                    onPressed: () => setState(() => selectedTab = 'remaining'),
+                    child: Text("Remaining Vaccines",
+                        style: TextStyle(fontSize: 18, fontWeight: selectedTab == 'remaining' ? FontWeight.bold : FontWeight.normal)),
+                  ),
+                  TextButton(
+                    onPressed: () => setState(() => selectedTab = 'completed'),
+                    child: Text("Completed Vaccines",
+                        style: TextStyle(fontSize: 18, fontWeight: selectedTab == 'completed' ? FontWeight.bold : FontWeight.normal)),
+                  ),
+                ],
+              ),
+
+              // ✅ Vaccine List
+              Expanded(
+                child: ListView.builder(
+                  itemCount: selectedTab == 'remaining' ? remainingVaccines.length : completedVaccines.length,
+                  itemBuilder: (context, index) {
+                    final vaccine = selectedTab == 'remaining' ? remainingVaccines[index] : completedVaccines[index];
+                    return Card(
+                      margin: EdgeInsets.all(8),
+                      child: ListTile(
+                        title: Text(vaccine['name'], style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        subtitle: Text("Age Group: ${vaccine['age_group']}\n${vaccine['description']}"),
+                        trailing: Icon(
+                          selectedTab == 'remaining' ? Icons.schedule : Icons.check_circle,
+                          color: selectedTab == 'remaining' ? Colors.orange : Colors.green,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          );
   }
 }
