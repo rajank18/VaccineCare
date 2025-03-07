@@ -132,83 +132,48 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildHomePage() {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("VaccineCare"),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.logout),
-            onPressed: _logout,
-          ),
-        ],
-      ),
-      body: isLoading
-          ? Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    TextButton(
-                      onPressed: () => setState(() => selectedTab = 'remaining'),
-                      child: Text(
-                        "Remaining Vaccines",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: selectedTab == 'remaining'
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                        ),
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () => setState(() => selectedTab = 'completed'),
-                      child: Text(
-                        "Completed Vaccines",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: selectedTab == 'completed'
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: selectedTab == 'remaining'
-                        ? remainingVaccines.length
-                        : completedVaccines.length,
-                    itemBuilder: (context, index) {
-                      final vaccine = selectedTab == 'remaining'
-                          ? remainingVaccines[index]
-                          : completedVaccines[index];
-                      return Card(
-                        margin: EdgeInsets.all(8),
-                        child: ListTile(
-                          title: Text(
-                            vaccine['name'],
-                            style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Text(
-                              "Age Group: ${vaccine['age_group']}\n${vaccine['description']}"),
-                          trailing: Icon(
-                            selectedTab == 'remaining'
-                                ? Icons.schedule
-                                : Icons.check_circle,
-                            color: selectedTab == 'remaining'
-                                ? Colors.orange
-                                : Colors.green,
-                          ),
-                        ),
-                      );
-                    },
+    return isLoading
+        ? Center(child: CircularProgressIndicator())
+        : Column(
+            children: [
+              // ✅ Toggle Buttons for Filtering
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  TextButton(
+                    onPressed: () => setState(() => selectedTab = 'remaining'),
+                    child: Text("Remaining",
+                        style: TextStyle(fontSize: 18, fontWeight: selectedTab == 'remaining' ? FontWeight.bold : FontWeight.normal)),
                   ),
+                  TextButton(
+                    onPressed: () => setState(() => selectedTab = 'completed'),
+                    child: Text("Completed",
+                        style: TextStyle(fontSize: 18, fontWeight: selectedTab == 'completed' ? FontWeight.bold : FontWeight.normal)),
+                  ),
+                ],
+              ),
+
+              // ✅ Vaccine List
+              Expanded(
+                child: ListView.builder(
+                  itemCount: selectedTab == 'remaining' ? remainingVaccines.length : completedVaccines.length,
+                  itemBuilder: (context, index) {
+                    final vaccine = selectedTab == 'remaining' ? remainingVaccines[index] : completedVaccines[index];
+                    return Card(
+                      margin: EdgeInsets.all(8),
+                      child: ListTile(
+                        title: Text(vaccine['name'], style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        subtitle: Text("Age Group: ${vaccine['age_group']}\n${vaccine['description']}"),
+                        trailing: Icon(
+                          selectedTab == 'remaining' ? Icons.schedule : Icons.check_circle,
+                          color: selectedTab == 'remaining' ? Colors.orange : Colors.green,
+                        ),
+                      ),
+                    );
+                  },
                 ),
-              ],
-            ),
-    );
+              ),
+            ],
+          );
   }
 }
