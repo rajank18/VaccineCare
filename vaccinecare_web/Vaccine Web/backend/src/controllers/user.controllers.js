@@ -44,7 +44,8 @@ export const login = async (req, res) => {
       if (!email || !password) {
          return res.status(400).json({ error: "Email and password are required" });
       }
-
+      
+      
       // Fetch User from Database
       const { data, error } = await supabase
          .from("users")

@@ -119,20 +119,20 @@ const WorkerDashboard = () => {
 
          <div className="container mx-auto p-6 space-y-6">
             {/* Upper Content Box */}
-            <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
+            <div className="bg-blue-600 text-white rounded-lg shadow-sm p-6 border border-gray-100">
                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                   <div>
-                     <h1 className="text-3xl font-bold text-gray-800">Worker Management</h1>
-                     <p className="text-gray-600 mt-2">Manage and monitor all registered workers</p>
+                     <h1 className="text-3xl font-bold text-white">Worker Management</h1>
+                     <p className="text-white mt-2">Manage and monitor all registered workers</p>
                   </div>
 
                   <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
                      <div className="relative flex-grow sm:flex-grow-0">
                         <Input
                            type="text"
+                           className="pl-10 w-full text-white" 
                            placeholder="Search workers..."
                            onChange={(e) => debouncedSearch(e.target.value)}
-                           className="pl-10 w-full"
                         />
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5" />
                      </div>

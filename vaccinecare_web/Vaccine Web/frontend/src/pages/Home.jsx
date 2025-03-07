@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import Navigation from "./Navigation";
 import { useGetAdminDeshboardQuery } from "@/features/api/authApi";
 import { motion } from "framer-motion";
@@ -17,9 +17,13 @@ import {
 } from "lucide-react";
 
 const Home = () => {
-  const { data: dashboardData } = useGetAdminDeshboardQuery();
+  const { data: dashboardData ,refetch} = useGetAdminDeshboardQuery();
 
-  // Detailed vaccine information
+  useEffect(() => { 
+    refetch();
+  } , [])
+  
+
   const vaccineDetails = [
     {
       name: "BCG (Bacillus Calmette-Guérin)",
@@ -186,7 +190,7 @@ const Home = () => {
               <div className="bg-gradient-to-br from-purple-50 to-white p-8 rounded-xl shadow-sm">
                 <Baby className="h-10 w-10 text-purple-600 mb-4" />
                 <h3 className="text-3xl font-bold text-gray-800 mb-2">{dashboardData?.vaccine_records_count || 0}</h3>
-                <p className="text-gray-600">Children Protected</p>
+                <p className="text-gray-600">vaccine given</p>
               </div>
             </motion.div>
           </div>
